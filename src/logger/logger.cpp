@@ -65,7 +65,7 @@ void Logger::handleMessage(QtMsgType type, const QMessageLogContext& context, co
 
     const QString logMsg = QString("%1[%2]: %3%4").arg(context.category, msgTypes[type], fileInfo, msg);
 
-    Logger::self()->logMessage(logMsg, type, context);
+    //Logger::self()->logMessage(logMsg, type, context);
     if (originalHandler) {
         originalHandler(type, context, logMsg);
     }
