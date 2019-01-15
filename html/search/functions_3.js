@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['get_5fdevice_5fid',['get_device_id',['../classbrping_1_1ping1d_1_1Ping1D.html#aff54fad6b6b55472bd09f31da949f9f6',1,'brping::ping1d::Ping1D']]],
+  ['get_5fdistance',['get_distance',['../classbrping_1_1ping1d_1_1Ping1D.html#aad8085780ad85f55ab29e6ef5a844684',1,'brping::ping1d::Ping1D']]],
+  ['get_5fdistance_5fsimple',['get_distance_simple',['../classbrping_1_1ping1d_1_1Ping1D.html#a5280ef1d3e8779500b4ec7e5b1f97306',1,'brping::ping1d::Ping1D']]],
+  ['get_5ffirmware_5fversion',['get_firmware_version',['../classbrping_1_1ping1d_1_1Ping1D.html#a8cf6979244428b8d07f875c7c5780f71',1,'brping::ping1d::Ping1D']]],
+  ['get_5fgain_5findex',['get_gain_index',['../classbrping_1_1ping1d_1_1Ping1D.html#a4971e9e46b434f67262cf58f28f5a85e',1,'brping::ping1d::Ping1D']]],
+  ['get_5fgeneral_5finfo',['get_general_info',['../classbrping_1_1ping1d_1_1Ping1D.html#a42514f0012fe020d2bc89b796b6d1164',1,'brping::ping1d::Ping1D']]],
+  ['get_5fmode_5fauto',['get_mode_auto',['../classbrping_1_1ping1d_1_1Ping1D.html#a484e5bf7bda9fbc3c9957c67072a5a0a',1,'brping::ping1d::Ping1D']]],
+  ['get_5fpayload_5fformat',['get_payload_format',['../classbrping_1_1pingmessage_1_1PingMessage.html#adefd59e3f313f1680982fbe3091cbdbb',1,'brping::pingmessage::PingMessage']]],
+  ['get_5fpcb_5ftemperature',['get_pcb_temperature',['../classbrping_1_1ping1d_1_1Ping1D.html#a19200bb4640c628e3bc2c7b7b1d20f0f',1,'brping::ping1d::Ping1D']]],
+  ['get_5fping_5fenable',['get_ping_enable',['../classbrping_1_1ping1d_1_1Ping1D.html#a295cc3ec515f10f7aee09f8f88887685',1,'brping::ping1d::Ping1D']]],
+  ['get_5fping_5finterval',['get_ping_interval',['../classbrping_1_1ping1d_1_1Ping1D.html#a63a814a6e735c59380a9da63df1c314e',1,'brping::ping1d::Ping1D']]],
+  ['get_5fprocessor_5ftemperature',['get_processor_temperature',['../classbrping_1_1ping1d_1_1Ping1D.html#a3ce5275302f4ec01f7f20eefdf2fb03e',1,'brping::ping1d::Ping1D']]],
+  ['get_5fprofile',['get_profile',['../classbrping_1_1ping1d_1_1Ping1D.html#aabc6a0346f50f537a03b9837f54df63e',1,'brping::ping1d::Ping1D']]],
+  ['get_5fprotocol_5fversion',['get_protocol_version',['../classbrping_1_1ping1d_1_1Ping1D.html#a75030858bb0c09b78dd4536c8a20c569',1,'brping::ping1d::Ping1D']]],
+  ['get_5fpulse_5fduration',['get_pulse_duration',['../classbrping_1_1ping1d_1_1Ping1D.html#a3449ee564f9b39fd18f5b2482a3c9bea',1,'brping::ping1d::Ping1D']]],
+  ['get_5frange',['get_range',['../classbrping_1_1ping1d_1_1Ping1D.html#a2e8630288e7b29cdf6b2f86843b6ea01',1,'brping::ping1d::Ping1D']]],
+  ['get_5fspeed_5fof_5fsound',['get_speed_of_sound',['../classbrping_1_1ping1d_1_1Ping1D.html#a0a043808aad0a61b5313813aab4e1244',1,'brping::ping1d::Ping1D']]],
+  ['get_5fvoltage_5f5',['get_voltage_5',['../classbrping_1_1ping1d_1_1Ping1D.html#a8f953ac01065d1ce10f0a4e75b45e6da',1,'brping::ping1d::Ping1D']]]
+];
