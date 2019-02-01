@@ -455,7 +455,7 @@ Download <a href="https://github.com/bluerobotics/ping-viewer/releases/download/
 <h2 id="principle-of-operation">Principle of Operation</h2>
 <p>The Blue Robotics Ping Echosounder is a 1-dimensional sonar that measures the distance to objects underwater. The device emits a brief 115 kHz acoustic pulse from the transducer at the face of the device. The device then measures the strength of returned acoustic energy and the amount of time for the returned energy to reach a significant level. The sound wave travels through water, and reflects or 'echos' off of solid objects, and travels back to the device. The device then calculates the distance to the solid object with the equation <code>distance = known speed of sound in water * (measured time for echo to return / 2)</code>.</p>
 <p align="center">
-    <img src="wiki/images/echo.svg.png">
+    <img src="../images/echo.svg.png">
 </p>
 
 <p>See the Wikipedia articles on <a href="https://en.wikipedia.org/wiki/Echo_sounding">Echo sounding</a> and <a href="https://en.wikipedia.org/wiki/Fishfinder">Fishfinders</a> for more information on how the device operates.</p>
@@ -471,13 +471,13 @@ Download <a href="https://github.com/bluerobotics/ping-viewer/releases/download/
 4. <a href="#waterfall">Waterfall</a></p>
 <p>TODO use default color gradient</p>
 <p align="center">
-    <img src="../images/interface-annotated.png">
+    <img src="../images/viewer/interface-annotated.png">
 </p>
 
 <p>TODO add closeups for each</p>
 <h4 id="distance-readout">Distance Readout</h4>
 <p align="center">
-    <img src="../images/distance-readout-closeup.png">
+    <img src="../images/viewer/distance-readout-closeup.png">
 </p>
 
 <p>The Distance Readout displays the distance to the target in the most recent measurement. This is the distance to the seafloor in <a href="https://en.wikipedia.org/wiki/Depth_sounding">depth sounding</a> applications.</p>
@@ -485,21 +485,21 @@ Download <a href="https://github.com/bluerobotics/ping-viewer/releases/download/
 <p>The size of the distance readout can be <a href="hotkeys-and-shortcuts#mouse-shortcuts">moved and adjusted</a>.</p>
 <h4 id="distance-axis">Distance Axis</h4>
 <p align="center">
-    <img src="../images/distance-axis-closeup.png">
+    <img src="../images/viewer/distance-axis-closeup.png">
 </p>
 
 <p>The Distance Axis is labeled with bold numbers on the right-hand edge of the Waterfall. This axis represents the distance from the Ping device transducer. The axis runs vertically down the screen, with the face of the transducer (zero distance) located at the top of the window. The deeper/farther an object is from the transducer, the closer its return will appear to the bottom of the window. The Distance Axis scale automatically adjusts to display the current scanning range of the Ping device.</p>
 <p>There is an orange arrow on the Distance Axis indicating the distance to the target in the most recent measurement (this is the same as the Distance Readout).</p>
 <h4 id="return-plot">Return Plot</h4>
 <p align="center">
-    <img src="../images/return-plot-closeup.png">
+    <img src="../images/viewer/return-plot-closeup.png">
 </p>
 
 <p>The Return Plot displays the return strength vs distance of the most recent <a href="#distance-and-profile-measurements"><strong>Profile</strong></a> sample. The plot displays the measurement of only a single dependent variable (return strength), and is simply mirrored for ease of viewing. Stronger returns appear as wider traces.</p>
 <p><strong>Note</strong> You may observe a very strong return at the top of the screen (at zero distance, essentially touching the device); this return is from the Ping device itself. When the Ping device emits the acoustic pulse, the device is still vibrating or 'ringing' like a bell when it begins measuring the return signal. This residual energy in the vibrations of the Ping device body is picked up as a return signal until it decays away.</p>
 <h4 id="waterfall">Waterfall</h4>
 <p align="center">
-    <img src="../images/waterfall-closeup.png">
+    <img src="../images/viewer/waterfall-closeup.png">
 </p>
 
 <p>The Waterfall is a three dimensional plot that occupies the main portion of the application window. The Waterfall plots consecutive <a href="#distance-and-profile-measurements"><strong>Profile</strong></a> samples (distance running vertically and color indicating signal strength). The horizontal axis is time; new data is displayed on the right edge of the Waterfall as older data moves to the left.</p>
