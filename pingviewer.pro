@@ -30,6 +30,7 @@ RESOURCES += \
         -Wextra \
         -Wnon-virtual-dtor \
         -Wunused \
+        -Wno-error=deprecated-declarations \
 
     *-g++ {
         QMAKE_CXXFLAGS += \
