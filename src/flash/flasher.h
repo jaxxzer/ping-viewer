@@ -76,7 +76,7 @@ public:
      * @brief Start the flash procedure
      *
      */
-    void flash();
+    virtual void flash();
 
     /**
      * @brief Set the flash baud rate

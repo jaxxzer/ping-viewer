@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(ping-viewer LANGUAGES CXX)
+project(ping-viewer LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CXX_STANDARD_REQUIRED ON)
@@ -55,6 +55,7 @@ include_directories(
     lib/mavlink/c_library_v2/
     lib/mavlink/c_library_v2/minimal
     lib/mavlink/c_library_v2/common
+    lib/libcintelhex/include
 )
 
 add_subdirectory(lib/fmt/fmt)

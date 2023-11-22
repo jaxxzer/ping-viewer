@@ -28,6 +28,8 @@
 #include "util.h"
 #include "waterfallplot.h"
 
+#include "pic-hex.cpp"
+
 Q_DECLARE_LOGGING_CATEGORY(mainCategory)
 
 PING_LOGGING_CATEGORY(mainCategory, "ping.main")
@@ -131,6 +133,7 @@ int main(int argc, char* argv[])
     // Start KCrash
     KCrash::initialize();
 #endif
-
+    PicHex p = PicHex("/home/jacob/Downloads/UWU.production.hexasd");
+    qCInfo(mainCategory) << p.applicationData();
     return app.exec();
 }
