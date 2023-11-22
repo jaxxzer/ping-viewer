@@ -133,7 +133,8 @@ int main(int argc, char* argv[])
     // Start KCrash
     KCrash::initialize();
 #endif
-    PicHex p = PicHex("/home/jacob/Downloads/UWU.production.hexasd");
+    PicHex p = PicHex("/home/jacob/Downloads/UWU.production.hex");
+    qCInfo(mainCategory) << p.applicationData().size();
     qCInfo(mainCategory) << p.applicationData();
     return app.exec();
 }

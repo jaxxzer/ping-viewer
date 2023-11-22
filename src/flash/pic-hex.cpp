@@ -8,6 +8,11 @@ extern "C" {
 
 PicHex::PicHex(const char* filename)
 {
+  // pic_hex_application_data = QByteArray(static_cast<const char*>(0), PROGRAM_MEMORY_SIZE);
+  // pic_hex_configuration_data = QByteArray(static_cast<const char*>(0), CONFIGURATION_MEMORY_SIZE);
+  pic_hex_application_data = QByteArray(PING360_PROGRAM_MEMORY_SIZE, 0);
+  pic_hex_configuration_data = QByteArray(PING360_CONFIGURATION_MEMORY_SIZE, 0);
+
   pic_hex_extract_application(filename);
   pic_hex_extract_configuration(filename);
 }
@@ -22,7 +27,7 @@ bool PicHex::pic_hex_extract_application(const char *filename)
   }
 
   bool ret =
-      pic_hex_mem_cpy(record_set, pic_hex_application_data, sizeof(pic_hex_application_data), PROGRAM_MEMORY_OFFSET);
+      pic_hex_mem_cpy(record_set, reinterpret_cast<uint8_t*>(pic_hex_application_data.data()), pic_hex_application_data.size(), PROGRAM_MEMORY_OFFSET);
   ihex_rs_free(record_set);
   return ret;
 }
@@ -36,7 +41,7 @@ bool PicHex::pic_hex_extract_configuration(const char *filename)
     return false;
   }
 
-  bool ret = pic_hex_mem_cpy(record_set, pic_hex_configuration_data, sizeof(pic_hex_configuration_data),
+  bool ret = pic_hex_mem_cpy(record_set, reinterpret_cast<uint8_t*>(pic_hex_configuration_data.data()), pic_hex_configuration_data.size(),
                              CONFIGURATION_MEMORY_OFFSET);
   ihex_rs_free(record_set);
   return ret;
