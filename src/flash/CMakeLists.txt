@@ -13,6 +13,7 @@ STATIC
     flasher.cpp
     ping360flasher.cpp
     pic-hex.cpp
+    packet.cpp
     ${LIBCINTELHEXFILES}
 )
 

@@ -29,6 +29,7 @@
 #include "waterfallplot.h"
 
 #include "pic-hex.cpp"
+#include "packet.h"
 
 Q_DECLARE_LOGGING_CATEGORY(mainCategory)
 
@@ -136,5 +137,18 @@ int main(int argc, char* argv[])
     PicHex p = PicHex("/home/jacob/Downloads/UWU.production.hex");
     qCInfo(mainCategory) << p.applicationData().size();
     qCInfo(mainCategory) << p.applicationData();
+
+    Ping360BootloaderPacket p360bp;
+
+    // Ping360BootloaderPacket::packet_cmd_reset_processor_t pp = Ping360BootloaderPacket::packet_cmd_reset_processor_init;
+    Ping360BootloaderPacket::packet_cmd_read_dev_id_t pp = Ping360BootloaderPacket::packet_cmd_read_dev_id_init;
+
+    qCInfo(mainCategory) << p360bp.packet_get_id(pp.data);
+    Ping360BootloaderPacket::packet_update_footer(pp.data);
+
+    // for(int i = 0; i < pp.message.header.length + 1; i++) {
+    for(int i = 0; i < sizeof(Ping360BootloaderPacket::packet_cmd_read_dev_id_t) + 1; i++) {
+        qCInfo(mainCategory) << pp.data[i] << p360bp.packet_parse_byte(pp.data[i]);
+    }
     return app.exec();
 }
