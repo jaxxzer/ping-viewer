@@ -81,21 +81,33 @@ class Ping360BootloaderPacket
     };
 
     static constexpr packet_cmd_reset_processor_t packet_cmd_reset_processor_init = {
-        PACKET_FRAMING_START,
-        CMD_RESET_PROCESSOR,
-        PACKET_FRAMING_END,
+      {
+        { PACKET_FRAMING_START,
+          CMD_RESET_PROCESSOR,
+          0 // length
+        }, // header
+        { 0, 0, PACKET_FRAMING_END } // footer
+      }
     };
 
     static constexpr packet_cmd_jump_start_t packet_cmd_jump_start_init = {
-        PACKET_FRAMING_START,
-        CMD_JUMP_START,
-        PACKET_FRAMING_END,
+{
+          { PACKET_FRAMING_START,
+            CMD_JUMP_START,
+            0 // length
+          }, // header
+          { 0, 0, PACKET_FRAMING_END } // footer
+        }
     };
 
     static constexpr packet_cmd_restart_bootloader_t packet_cmd_restart_bootloader_init = {
-        PACKET_FRAMING_START,
-        CMD_RESTART_BOOTLOADER,
-        PACKET_FRAMING_END,
+{
+          { PACKET_FRAMING_START,
+            CMD_RESTART_BOOTLOADER,
+            0 // length
+          }, // header
+          { 0, 0, PACKET_FRAMING_END } // footer
+        }
     };
 
     static constexpr packet_cmd_read_version_t packet_cmd_read_version_init = {
@@ -118,10 +130,14 @@ class Ping360BootloaderPacket
     } packet_cmd_read_pgm_mem_t;
 
     static constexpr packet_cmd_read_pgm_mem_t packet_cmd_read_pgm_mem_init = {
-        PACKET_FRAMING_START,
-        CMD_READ_PGM_MEM,
-        4, // length
-        PACKET_FRAMING_END,
+      {
+          { PACKET_FRAMING_START,
+            CMD_READ_PGM_MEM,
+            4 // length
+          }, // header
+          0,
+          { 0, 0, PACKET_FRAMING_END } // footer
+      }
     };
 
     typedef union {
@@ -135,10 +151,15 @@ class Ping360BootloaderPacket
     } packet_cmd_write_pgm_mem_t;
 
     static constexpr packet_cmd_write_pgm_mem_t packet_cmd_write_pgm_mem_init = {
-        PACKET_FRAMING_START,
-        CMD_WRITE_PGM_MEM,
-        1540, // length
-        PACKET_FRAMING_END,
+      {
+          { PACKET_FRAMING_START,
+            CMD_WRITE_PGM_MEM,
+            1540 // length
+          }, // header
+          0,
+          {0},
+          { 0, 0, PACKET_FRAMING_END } // footer
+      }
     };
 
     typedef union {
@@ -151,10 +172,14 @@ class Ping360BootloaderPacket
     } packet_cmd_write_cfg_mem_t;
 
     static constexpr packet_cmd_write_cfg_mem_t packet_cmd_write_cfg_mem_init = {
-        PACKET_FRAMING_START,
-        CMD_WRITE_CFG_MEM,
-        24, // length
-        PACKET_FRAMING_END,
+      {
+          { PACKET_FRAMING_START,
+            CMD_WRITE_CFG_MEM,
+            24 // length
+          }, // header
+          {0},
+          { 0, 0, PACKET_FRAMING_END } // footer
+      }
     };
   
     typedef union {

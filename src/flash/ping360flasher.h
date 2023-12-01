@@ -65,5 +65,4 @@ private:
     int port_write(const uint8_t *buffer, int nBytes);
     int port_read(uint8_t* data, int nBytes);
     // AbstractLink* link() const { return _link.data() ? _link->self() : nullptr; };
-
 };

@@ -1,5 +1,6 @@
 #include "ping360flasher.h"
 #include "logger.h"
+#include "pic-hex.h"
 
 #include <QByteArray>
 #include <QSerialPortInfo>
@@ -21,6 +22,7 @@ Ping360Flasher::Ping360Flasher()
 
 void Ping360Flasher::flash()
 {
+  PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
   printf("hellow world");
     QSerialPortInfo pInfo(_link.serialPort());
     _port.setPort(pInfo);
@@ -68,6 +70,66 @@ void Ping360Flasher::flash()
         // return 1;
     }
 
+ printf("\nloading application from %s...", _firmwareFilePath);
+
+
+
+
+  uint8_t zeros[Ping360BootloaderPacket::PACKET_ROW_LENGTH];
+  memset(zeros, 0xff, sizeof(zeros));
+  const uint32_t bootAddress = 0x1000;
+  printf("\nwipe boot address 0x%08x...", bootAddress);
+  if (bl_write_program_memory(zeros, bootAddress)) {
+    printf("ok\n");
+  } else {
+    printf("error\n");
+    // return 1;
+  }
+
+
+  printf("\nwriting application...\n");
+  for (int i = 0; i < 86; i++) {
+    if (i >= 1 && i <= 3) {
+      continue; // protected boot code
+    }
+    if (i == 4) {
+      continue; // we write this page last, to prevent booting after failed programming
+    }
+
+    printf("write 0x%08x: ", i * 0x400);
+
+    if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + i * Ping360BootloaderPacket::PACKET_ROW_LENGTH, i * 0x400)) {
+      printf("ok\n");
+    } else {
+      printf("error\n");
+      // return 1;
+    }
+  }
+
+
+  printf("\nwrite boot address 0x%08x...", bootAddress);
+  if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + 4*Ping360BootloaderPacket::PACKET_ROW_LENGTH, bootAddress)) {
+    printf("ok\n");
+  } else {
+    printf("error\n");
+    // return 1;
+  }
+
+  printf("\nwriting configuration...");
+  if (bl_write_configuration_memory(reinterpret_cast<uint8_t*>(hex.configurationData().data()))) {
+    printf("ok\n");
+  } else {
+    printf("error\n");
+    // return 1;
+  }
+
+  printf("\nstarting application...");
+  if (bl_reset()) {
+    printf("ok\n");
+  } else {
+    printf("error\n");
+    // return 1;
+  }
 }
 
 

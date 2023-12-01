@@ -113,6 +113,7 @@ signals:
 
 protected:
     LinkConfiguration _link;
+    QString _firmwareFilePath;
 
 private:
     void firmwareUpdatePercentage(const QString& output);
@@ -120,7 +121,6 @@ private:
 
     int _baudRate = 57600;
     QString _binRelativePath;
-    QString _firmwareFilePath;
     QSharedPointer<QProcess> _firmwareProcess;
     QString _message;
     States _state = Idle;
