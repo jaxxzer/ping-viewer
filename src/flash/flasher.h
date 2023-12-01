@@ -111,6 +111,9 @@ signals:
     void flashProgress(float progress);
     void stateChanged(Flasher::States state);
 
+protected:
+    LinkConfiguration _linkConfiguration;
+
 private:
     void firmwareUpdatePercentage(const QString& output);
     static QString stm32flashPath();
@@ -119,7 +122,6 @@ private:
     QString _binRelativePath;
     QString _firmwareFilePath;
     QSharedPointer<QProcess> _firmwareProcess;
-    LinkConfiguration _link;
     QString _message;
     States _state = Idle;
     const QList<int> _validBaudRates = {57600, 115200, 230400};

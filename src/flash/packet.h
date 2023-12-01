@@ -194,6 +194,8 @@ class Ping360BootloaderPacket
 
     static void packet_update_footer(packet_t packet);
 
+    void reset() { parser.parseState = WAIT_START; };
+
     typedef enum {
       ERROR,
       WAIT_START,
