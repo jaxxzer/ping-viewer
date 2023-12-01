@@ -53,6 +53,7 @@ const float Ping360::_angularSpeedGradPerMs = 400.0f / 2400.0f;
 
 Ping360::Ping360()
     : PingSensor(PingDeviceType::PING360)
+    // , _flasher(new Ping360Flasher)
 {
     // QVector crashs when constructed in initialization list
     _data = QVector<double>(_maxNumberOfPoints, 0);
@@ -443,20 +444,93 @@ void Ping360::handleMessage(const ping_message& msg)
 
 void Ping360::firmwareUpdate(QString fileUrl, bool sendPingGotoBootloader, int baud, bool verify)
 {
-    Q_UNUSED(fileUrl)
-    Q_UNUSED(sendPingGotoBootloader)
-    Q_UNUSED(baud)
-    Q_UNUSED(verify)
-    // TODO
+    if (fileUrl.contains("http")) {
+        NetworkManager::self()->download(fileUrl, [this, sendPingGotoBootloader, baud, verify](const QString& path) {
+            qCDebug(FLASH) << "Downloaded firmware:" << path;
+            flash(path, sendPingGotoBootloader, baud, verify);
+        });
+    } else {
+        flash(fileUrl, sendPingGotoBootloader, baud, verify);
+    }
 }
 
 void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int baud, bool verify)
 {
-    Q_UNUSED(fileUrl)
-    Q_UNUSED(sendPingGotoBootloader)
-    Q_UNUSED(baud)
-    Q_UNUSED(verify)
-    // TODO
+    flasher()->setState(Flasher::Idle);
+    flasher()->setState(Flasher::StartingFlash);
+    if (!HexValidator::isValidFile(fileUrl)) {
+        auto errorMsg = QStringLiteral("File does not contain a valid Intel Hex format: %1").arg(fileUrl);
+        qCWarning(PING_PROTOCOL_PING360) << errorMsg;
+        flasher()->setState(Flasher::Error, errorMsg);
+        return;
+    };
+
+    SerialLink* serialLink = dynamic_cast<SerialLink*>(link());
+    if (!serialLink) {
+        auto errorMsg = QStringLiteral("It's only possible to flash via serial.");
+        qCWarning(PING_PROTOCOL_PING360) << errorMsg;
+        flasher()->setState(Flasher::Error, errorMsg);
+        return;
+    }
+
+    if (!link()->isOpen()) {
+        auto errorMsg = QStringLiteral("Link is not open to do the flash procedure.");
+        qCWarning(PING_PROTOCOL_PING360) << errorMsg;
+        flasher()->setState(Flasher::Error, errorMsg);
+        return;
+    }
+
+    // Stop requests and messages from the sensor
+    _timeoutProfileMessage.stop();
+    // setPingFrequency(0);
+
+    if (sendPingGotoBootloader) {
+        qCDebug(PING_PROTOCOL_PING360) << "Put it in bootloader mode.";
+        ping360_reset m;
+        m.set_bootloader(1);
+        m.updateChecksum();
+        writeMessage(m);
+    }
+
+    // Wait for bytes to be written before finishing the connection
+    while (serialLink->port()->bytesToWrite()) {
+        qCDebug(PING_PROTOCOL_PING360) << "Waiting for bytes to be written...";
+        // We are not changing the connection structure, only waiting for bytes to be written
+        const_cast<QSerialPort*>(serialLink->port())->waitForBytesWritten();
+        qCDebug(PING_PROTOCOL_PING360) << "Done !";
+    }
+
+    qCDebug(PING_PROTOCOL_PING360) << "Finish connection.";
+
+    auto flashSensor = [=] {
+        // flasher()->setBaudRate(baud);
+        flasher()->setFirmwarePath(fileUrl);
+        flasher()->setLink(link()->configuration()[0]);
+        flasher()->setVerify(verify);
+        flasher()->flash();
+    };
+
+    auto finishConnection = [=] {
+        link()->finishConnection();
+
+        qCDebug(PING_PROTOCOL_PING360) << "Save sensor configuration.";
+        updateSensorConfigurationSettings();
+
+        qCDebug(PING_PROTOCOL_PING360) << "Start flash.";
+
+        QTimer::singleShot(1000, flashSensor);
+    };
+    QTimer::singleShot(1000, finishConnection);
+
+    // // Clear last configuration src ID to detect device as a new one
+    // connect(&_flasher, &Flasher::stateChanged, this, [this] {
+    //     if (flasher()->state() == Flasher::States::FlashFinished) {
+    //         QThread::msleep(500);
+    //         // Clear last configuration src ID to detect device as a new one
+    //         resetSensorLocalVariables();
+    //         Sensor::connectLink(*link()->configuration());
+    //     }
+    // });
 }
 
 void Ping360::setLastSensorConfiguration()
