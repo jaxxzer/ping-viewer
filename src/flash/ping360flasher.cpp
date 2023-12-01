@@ -1,7 +1,11 @@
 #include "ping360flasher.h"
+#include "logger.h"
 
 #include <QByteArray>
 #include <QSerialPortInfo>
+
+PING_LOGGING_CATEGORY(PING360FLASH, "ping360.flash")
+
 
 Ping360Flasher::Ping360Flasher()
     : Flasher()
@@ -17,63 +21,77 @@ Ping360Flasher::Ping360Flasher()
 
 void Ping360Flasher::flash()
 {
+  printf("hellow world");
     QSerialPortInfo pInfo(_link.serialPort());
     _port.setPort(pInfo);
-    _port.setBaudRate(_baudRate);
+    // _port.setBaudRate(_baudRate);
+    _port.setBaudRate(115200);
     _port.open(QIODevice::ReadWrite);
+    uint8_t a[] = {99, 234, 44, 234};
+    port_write(a, 4);
 
+    // printf("\nfetch device id...\n");
+    // uint16_t id;
+    // if (bl_read_device_id(&id)) {
+    // printf(" > device id: 0x%04x <\n", id);
+    // } else {
+    // printf("error fetching device id\n");
+    // // return 1;
+    // }
 
-    printf("\nfetch device id...\n");
-    uint16_t id;
-    if (bl_read_device_id(&id)) {
-    printf(" > device id: 0x%04x <\n", id);
-    } else {
-    printf("error fetching device id\n");
-    // return 1;
-    }
+    // printf("\nfetch device id...\n");
+    // if (bl_read_device_id(&id)) {
+    // printf(" > device id: 0x%04x <\n", id);
+    // } else {
+    // printf("error fetching device id\n");
+    // // return 1;
+    // }
 
+    // printf("\nfetch version...\n");
+    // Ping360BootloaderPacket::packet_rsp_version_t version;
+    // if (bl_read_version(&version)) {
+    //     if (version.message.version_major != expectedVersionMajor ||
+    //         version.message.version_minor != expectedVersionMinor ||
+    //         version.message.version_patch != expectedVersionPatch) {
+    //     printf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d\n", version.message.version_major,
+    //             version.message.version_minor, version.message.version_patch, expectedVersionMajor, expectedVersionMinor,
+    //             expectedVersionPatch);
+    //     // return 1;
+    //     }
 
-    printf("\nfetch version...\n");
-    Ping360BootloaderPacket::packet_rsp_version_t version;
-    if (bl_read_version(&version)) {
-        if (version.message.version_major != expectedVersionMajor ||
-            version.message.version_minor != expectedVersionMinor ||
-            version.message.version_patch != expectedVersionPatch) {
-        printf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d\n", version.message.version_major,
-                version.message.version_minor, version.message.version_patch, expectedVersionMajor, expectedVersionMinor,
-                expectedVersionPatch);
-        // return 1;
-        }
+    //     printf(" > device type 0x%02x : hardware revision %c : bootloader v%d.%d.%d <\n", version.message.device_type,
+    //         version.message.device_revision, version.message.version_major, version.message.version_minor,
+    //         version.message.version_patch);
 
-        printf(" > device type 0x%02x : hardware revision %c : bootloader v%d.%d.%d <\n", version.message.device_type,
-            version.message.device_revision, version.message.version_major, version.message.version_minor,
-            version.message.version_patch);
-
-    } else {
-        printf("error fetching version\n");
-        // return 1;
-    }
+    // } else {
+    //     printf("error fetching version\n");
+    //     // return 1;
+    // }
 
 }
 
 
-#define BL_TIMEOUT_DEFAULT_US 75000
+#define BL_TIMEOUT_DEFAULT_US 750000
 #define BL_TIMEOUT_WRITE_US 500000
 #define BL_TIMEOUT_READ_US 500000
 
 
 void Ping360Flasher::bl_write_packet(const packet_t packet)
 {
+    for (int i = 0; i < bl_parser.packet_get_length(packet); i++) {
+        qCCritical(PING360FLASH) << i << packet[i];
+    }
     port_write(packet, bl_parser.packet_get_length(packet));
 }
 
 Ping360BootloaderPacket::packet_t Ping360Flasher::bl_wait_packet(uint8_t id, uint32_t timeout_us) {
   bl_parser.reset();
 
-  uint32_t tstop = time_us() + timeout_us;
+  uint64_t tstop = time_us() + timeout_us;
+  qCCritical(PING360FLASH) << "waiting for packet" << time_us() << tstop;
 
+  uint8_t b;
   while (time_us() < tstop) {
-    uint8_t b;
     if (port_read(&b, 1) > 0) {
       Ping360BootloaderPacket::packet_parse_state_e parseResult = bl_parser.packet_parse_byte(b);
       if (parseResult == Ping360BootloaderPacket::NEW_MESSAGE) {
@@ -176,9 +194,12 @@ int Ping360Flasher::port_write(const uint8_t* buffer, int nBytes) {
   // _link.self()->sendData(QByteArray(reinterpret_cast<const char*>(buffer), nBytes));
   int bytes = _port.write(reinterpret_cast<const char*>(buffer), nBytes);
   _port.flush();
+  qCCritical(PING360FLASH) << "wrote" << bytes;
   return bytes;
 }
 
 int Ping360Flasher::port_read(uint8_t* data, int nBytes) {
-  return _port.read(reinterpret_cast<char*>(data), nBytes);
+  int bytes = _port.read(reinterpret_cast<char*>(data), nBytes);
+  if (bytes > 0) qCCritical(PING360FLASH) << "read" << bytes << "/" << nBytes;
+  return bytes;
 }

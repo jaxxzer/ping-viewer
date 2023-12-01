@@ -21,6 +21,7 @@
 #include "networkmanager.h"
 #include "networktool.h"
 #include "notificationmanager.h"
+#include "ping360flasher.h"
 #include "settingsmanager.h"
 
 #include <mavlink_msg_attitude.h>
@@ -53,8 +54,8 @@ const float Ping360::_angularSpeedGradPerMs = 400.0f / 2400.0f;
 
 Ping360::Ping360()
     : PingSensor(PingDeviceType::PING360)
-    // , _flasher(new Ping360Flasher)
 {
+    _flasher = new Ping360Flasher();
     // QVector crashs when constructed in initialization list
     _data = QVector<double>(_maxNumberOfPoints, 0);
 
@@ -292,7 +293,7 @@ void Ping360::handleMessage(const ping_message& msg)
             checkBaudrateProcess();
         } else {
             _baudrateConfigurationTimer.stop();
-            _timeoutProfileMessage.start();
+            //_timeoutProfileMessage.start();
             requestNextProfile();
         }
         return;
@@ -312,7 +313,7 @@ void Ping360::handleMessage(const ping_message& msg)
         if (link()->isWritable()) {
             // Use 200ms for network delay
             const int profileRunningTimeout = _angular_speed / _angularSpeedGradPerMs + 200;
-            _timeoutProfileMessage.start(profileRunningTimeout);
+            //_timeoutProfileMessage.start(profileRunningTimeout);
         }
 
         _data.resize(deviceData.data_length());
@@ -362,7 +363,7 @@ void Ping360::handleMessage(const ping_message& msg)
         if (link()->isWritable()) {
             // Use 200ms for network delay
             const int profileRunningTimeout = _angular_speed / _angularSpeedGradPerMs + 200;
-            _timeoutProfileMessage.start(profileRunningTimeout);
+            //_timeoutProfileMessage.start(profileRunningTimeout);
         }
 
         _data.resize(autoDeviceData.data_length());
@@ -420,7 +421,7 @@ void Ping360::handleMessage(const ping_message& msg)
             requestNextProfile();
 
             // restart timer
-            _timeoutProfileMessage.start();
+            //_timeoutProfileMessage.start();
 
             emit gainSettingChanged();
             emit samplePeriodChanged();
@@ -482,7 +483,7 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
 
     // Stop requests and messages from the sensor
     _timeoutProfileMessage.stop();
-    // setPingFrequency(0);
+    //setPingFrequency(0);
 
     if (sendPingGotoBootloader) {
         qCDebug(PING_PROTOCOL_PING360) << "Put it in bootloader mode.";
@@ -518,9 +519,9 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
 
         qCDebug(PING_PROTOCOL_PING360) << "Start flash.";
 
-        QTimer::singleShot(1000, flashSensor);
+        QTimer::singleShot(500, flashSensor);
     };
-    QTimer::singleShot(1000, finishConnection);
+    QTimer::singleShot(250, finishConnection);
 
     // // Clear last configuration src ID to detect device as a new one
     // connect(&_flasher, &Flasher::stateChanged, this, [this] {

@@ -5,7 +5,10 @@
 #include "packet.h"
 
 #include <QDateTime>
+#include <QLoggingCategory>
 #include <QSerialPort>
+
+Q_DECLARE_LOGGING_CATEGORY(PING360FLASH)
 
 /**
  * @brief Flasher implementation for Ping360 sensor device
