@@ -47,26 +47,26 @@ void Ping360Flasher::flash()
     // // return 1;
     // }
 
-    // printf("\nfetch version...\n");
-    // Ping360BootloaderPacket::packet_rsp_version_t version;
-    // if (bl_read_version(&version)) {
-    //     if (version.message.version_major != expectedVersionMajor ||
-    //         version.message.version_minor != expectedVersionMinor ||
-    //         version.message.version_patch != expectedVersionPatch) {
-    //     printf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d\n", version.message.version_major,
-    //             version.message.version_minor, version.message.version_patch, expectedVersionMajor, expectedVersionMinor,
-    //             expectedVersionPatch);
-    //     // return 1;
-    //     }
+    printf("\nfetch version...\n");
+    Ping360BootloaderPacket::packet_rsp_version_t version;
+    if (bl_read_version(&version)) {
+        if (version.message.version_major != expectedVersionMajor ||
+            version.message.version_minor != expectedVersionMinor ||
+            version.message.version_patch != expectedVersionPatch) {
+        printf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d\n", version.message.version_major,
+                version.message.version_minor, version.message.version_patch, expectedVersionMajor, expectedVersionMinor,
+                expectedVersionPatch);
+        // return 1;
+        }
 
-    //     printf(" > device type 0x%02x : hardware revision %c : bootloader v%d.%d.%d <\n", version.message.device_type,
-    //         version.message.device_revision, version.message.version_major, version.message.version_minor,
-    //         version.message.version_patch);
+        printf(" > device type 0x%02x : hardware revision %c : bootloader v%d.%d.%d <\n", version.message.device_type,
+            version.message.device_revision, version.message.version_major, version.message.version_minor,
+            version.message.version_patch);
 
-    // } else {
-    //     printf("error fetching version\n");
-    //     // return 1;
-    // }
+    } else {
+        printf("error fetching version\n");
+        // return 1;
+    }
 
 }
 

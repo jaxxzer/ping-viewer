@@ -99,9 +99,13 @@ class Ping360BootloaderPacket
     };
 
     static constexpr packet_cmd_read_version_t packet_cmd_read_version_init = {
-        PACKET_FRAMING_START,
-        CMD_READ_VERSION,
-        PACKET_FRAMING_END,
+        {
+          { PACKET_FRAMING_START,
+            CMD_READ_VERSION,
+            0 // length
+          }, // header
+          { 0, 0, PACKET_FRAMING_END } // footer
+        },
     };
 
     typedef union {
