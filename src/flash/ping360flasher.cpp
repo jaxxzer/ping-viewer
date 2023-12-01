@@ -49,7 +49,7 @@ void Ping360Flasher::flash()
     // // return 1;
     // }
 
-    printf("\nfetch version...\n");
+    qCInfo(PING360FLASH) << "fetch version...";
     Ping360BootloaderPacket::packet_rsp_version_t version;
     if (bl_read_version(&version)) {
         if (version.message.version_major != expectedVersionMajor ||
@@ -87,7 +87,8 @@ void Ping360Flasher::flash()
   }
 
 
-  printf("\nwriting application...\n");
+  // printf("\nwriting application...\n");
+  qCInfo(PING360FLASH) << "writing application...";
   for (int i = 0; i < 86; i++) {
     if (i >= 1 && i <= 3) {
       continue; // protected boot code
@@ -96,9 +97,44 @@ void Ping360Flasher::flash()
       continue; // we write this page last, to prevent booting after failed programming
     }
 
-    printf("write 0x%08x: ", i * 0x400);
+    // printf("write 0x%08x: ", i * 0x400);
+    if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + i*Ping360BootloaderPacket::PACKET_ROW_LENGTH, i*0x400)) {
+      qCInfo(PING360FLASH) << QString("write 0x%1: ok").arg(i*0x400, 8, 16, QChar('0'));
 
-    if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + i * Ping360BootloaderPacket::PACKET_ROW_LENGTH, i * 0x400)) {
+    } else {
+      qCCritical(PING360FLASH) << QString("write 0x%1: error").arg(i*0x400, 8, 16, QChar('0'));
+
+      // return 1;
+    }
+  }
+
+
+  if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + 4*Ping360BootloaderPacket::PACKET_ROW_LENGTH, bootAddress)) {
+    qCInfo(PING360FLASH) << QString("write boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0')) << "ok";
+  } else {
+    qCCritical(PING360FLASH) << QString("write boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0')) << "error";
+    // return 1;
+  }
+
+
+  printf("\nverifying application...\n");
+  uint8_t* verify;
+  for (int i = 4; i < 86; i++) {
+    if (i >= 1 && i <= 3) {
+      continue; // protected boot code
+    }
+    uint32_t offset = i * 0x400;
+    bool verify_ok  = true;
+    printf("verify 0x%08x: ", offset);
+
+    if (bl_read_program_memory(&verify, offset)) {
+      for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
+        if (verify[j] != hex.applicationData().data()[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
+          printf("X\nerror: program data differs at 0x%08x: 0x%02x != 0x%02x\n", i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
+                 hex.applicationData().data()[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
+          // return 1;
+        }
+      }
       printf("ok\n");
     } else {
       printf("error\n");
@@ -106,28 +142,17 @@ void Ping360Flasher::flash()
     }
   }
 
-
-  printf("\nwrite boot address 0x%08x...", bootAddress);
-  if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + 4*Ping360BootloaderPacket::PACKET_ROW_LENGTH, bootAddress)) {
-    printf("ok\n");
-  } else {
-    printf("error\n");
-    // return 1;
-  }
-
-  printf("\nwriting configuration...");
   if (bl_write_configuration_memory(reinterpret_cast<uint8_t*>(hex.configurationData().data()))) {
-    printf("ok\n");
+    qCInfo(PING360FLASH) << "writing configuration...ok";
   } else {
-    printf("error\n");
+    qCCritical(PING360FLASH) << "writing configuration...error";
     // return 1;
   }
 
-  printf("\nstarting application...");
   if (bl_reset()) {
-    printf("ok\n");
+    qCInfo(PING360FLASH) << "starting application...ok";
   } else {
-    printf("error\n");
+    qCCritical(PING360FLASH) << "starting application...error";
     // return 1;
   }
 }
@@ -135,7 +160,7 @@ void Ping360Flasher::flash()
 
 #define BL_TIMEOUT_DEFAULT_US 750000
 #define BL_TIMEOUT_WRITE_US 500000
-#define BL_TIMEOUT_READ_US 500000
+#define BL_TIMEOUT_READ_US 5000000
 
 
 void Ping360Flasher::bl_write_packet(const packet_t packet)
@@ -155,19 +180,22 @@ Ping360BootloaderPacket::packet_t Ping360Flasher::bl_wait_packet(uint8_t id, uin
   uint8_t b;
   while (time_us() < tstop) {
     _port.waitForReadyRead(10);
-    if (port_read(&b, 1) > 0) {
-      Ping360BootloaderPacket::packet_parse_state_e parseResult = bl_parser.packet_parse_byte(b);
-      if (parseResult == Ping360BootloaderPacket::NEW_MESSAGE) {
-        if (Ping360BootloaderPacket::packet_get_id(bl_parser.parser.rxBuffer) == id) {
-          return bl_parser.parser.rxBuffer;
-        } else {
-          printf("bootloader error: got unexpected id 0x%02x while waiting for 0x%02x",
-                 Ping360BootloaderPacket::packet_get_id(bl_parser.parser.rxBuffer), id);
+    for (int i = 0; i < _port.bytesAvailable(); i++) {
+      if (port_read(&b, 1) > 0) {
+        Ping360BootloaderPacket::packet_parse_state_e parseResult = bl_parser.packet_parse_byte(b);
+        // qCInfo(PING360FLASH) << parseResult;
+        if (parseResult == Ping360BootloaderPacket::NEW_MESSAGE) {
+          if (Ping360BootloaderPacket::packet_get_id(bl_parser.parser.rxBuffer) == id) {
+            return bl_parser.parser.rxBuffer;
+          } else {
+            printf("bootloader error: got unexpected id 0x%02x while waiting for 0x%02x",
+                  Ping360BootloaderPacket::packet_get_id(bl_parser.parser.rxBuffer), id);
+            return NULL;
+          }
+        } else if (parseResult == Ping360BootloaderPacket::ERROR) {
+          printf("bootloader error: parse error while waiting for 0x%02x!\n", id);
           return NULL;
         }
-      } else if (parseResult == Ping360BootloaderPacket::ERROR) {
-        printf("bootloader error: parse error while waiting for 0x%02x!\n", id);
-        return NULL;
       }
     }
   }

@@ -135,7 +135,7 @@ class Ping360BootloaderPacket
             CMD_READ_PGM_MEM,
             4 // length
           }, // header
-          0,
+          0, // address
           { 0, 0, PACKET_FRAMING_END } // footer
       }
     };
@@ -156,7 +156,7 @@ class Ping360BootloaderPacket
             CMD_WRITE_PGM_MEM,
             1540 // length
           }, // header
-          0,
+          0, // address
           {0},
           { 0, 0, PACKET_FRAMING_END } // footer
       }
