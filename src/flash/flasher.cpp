@@ -54,7 +54,7 @@ bool Flasher::setLink(const LinkConfiguration& link)
         qCCritical(FLASH) << "Link configuration is not valid:" << link;
         return false;
     }
-    _linkConfiguration = link;
+    _link = link;
     return true;
 };
 
@@ -101,7 +101,7 @@ void Flasher::flash()
         return;
     }
 
-    QSerialPortInfo pInfo(_linkConfiguration.serialPort());
+    QSerialPortInfo pInfo(_link.serialPort());
     auto portLocation = pInfo.systemLocation();
 
     auto baudRate = QString::number(_baudRate);

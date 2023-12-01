@@ -112,7 +112,7 @@ signals:
     void stateChanged(Flasher::States state);
 
 protected:
-    LinkConfiguration _linkConfiguration;
+    LinkConfiguration _link;
 
 private:
     void firmwareUpdatePercentage(const QString& output);

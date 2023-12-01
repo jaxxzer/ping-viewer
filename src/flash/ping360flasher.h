@@ -5,6 +5,7 @@
 #include "packet.h"
 
 #include <QDateTime>
+#include <QSerialPort>
 
 /**
  * @brief Flasher implementation for Ping360 sensor device
@@ -33,7 +34,7 @@ public:
     void flash() override;
 
 private:
-    Link _link;
+    QSerialPort _port;
     int _baudRate = 115200;
     const QList<int> _validBaudRates = {115200};
 
@@ -59,6 +60,7 @@ private:
 
     qint64 time_us() { return QDateTime::currentMSecsSinceEpoch() * 1000; };
     int port_write(const uint8_t *buffer, int nBytes);
+    int port_read(uint8_t* data, int nBytes);
     // AbstractLink* link() const { return _link.data() ? _link->self() : nullptr; };
 
 };
