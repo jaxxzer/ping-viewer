@@ -27,17 +27,17 @@ void Ping360Flasher::flash()
     // _port.setBaudRate(_baudRate);
     _port.setBaudRate(115200);
     _port.open(QIODevice::ReadWrite);
-    uint8_t a[] = {99, 234, 44, 234};
-    port_write(a, 4);
+    // uint8_t a[] = {99, 234, 44, 234};
+    // port_write(a, 4);
 
-    // printf("\nfetch device id...\n");
-    // uint16_t id;
-    // if (bl_read_device_id(&id)) {
-    // printf(" > device id: 0x%04x <\n", id);
-    // } else {
-    // printf("error fetching device id\n");
-    // // return 1;
-    // }
+    printf("\nfetch device id...\n");
+    uint16_t id;
+    if (bl_read_device_id(&id)) {
+    printf(" > device id: 0x%04x <\n", id);
+    } else {
+    printf("error fetching device id\n");
+    // return 1;
+    }
 
     // printf("\nfetch device id...\n");
     // if (bl_read_device_id(&id)) {
@@ -78,9 +78,9 @@ void Ping360Flasher::flash()
 
 void Ping360Flasher::bl_write_packet(const packet_t packet)
 {
-    for (int i = 0; i < bl_parser.packet_get_length(packet); i++) {
-        qCCritical(PING360FLASH) << i << packet[i];
-    }
+    // for (int i = 0; i < bl_parser.packet_get_length(packet); i++) {
+    //     qCCritical(PING360FLASH) << i << packet[i];
+    // }
     port_write(packet, bl_parser.packet_get_length(packet));
 }
 
@@ -88,10 +88,11 @@ Ping360BootloaderPacket::packet_t Ping360Flasher::bl_wait_packet(uint8_t id, uin
   bl_parser.reset();
 
   uint64_t tstop = time_us() + timeout_us;
-  qCCritical(PING360FLASH) << "waiting for packet" << time_us() << tstop;
+  // qCCritical(PING360FLASH) << "waiting for packet" << time_us() << tstop;
 
   uint8_t b;
   while (time_us() < tstop) {
+    _port.waitForReadyRead(10);
     if (port_read(&b, 1) > 0) {
       Ping360BootloaderPacket::packet_parse_state_e parseResult = bl_parser.packet_parse_byte(b);
       if (parseResult == Ping360BootloaderPacket::NEW_MESSAGE) {
@@ -194,12 +195,15 @@ int Ping360Flasher::port_write(const uint8_t* buffer, int nBytes) {
   // _link.self()->sendData(QByteArray(reinterpret_cast<const char*>(buffer), nBytes));
   int bytes = _port.write(reinterpret_cast<const char*>(buffer), nBytes);
   _port.flush();
-  qCCritical(PING360FLASH) << "wrote" << bytes;
+  // if (!_port.waitForBytesWritten(1000)) {
+  //   qCCritical(PING360FLASH) << "write timeout";
+  // }
+  // qCCritical(PING360FLASH) << "wrote" << bytes;
   return bytes;
 }
 
 int Ping360Flasher::port_read(uint8_t* data, int nBytes) {
   int bytes = _port.read(reinterpret_cast<char*>(data), nBytes);
-  if (bytes > 0) qCCritical(PING360FLASH) << "read" << bytes << "/" << nBytes;
+  // if (bytes > 0) qCCritical(PING360FLASH) << "read" << bytes << "/" << nBytes;
   return bytes;
 }
