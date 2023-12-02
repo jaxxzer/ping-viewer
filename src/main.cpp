@@ -134,8 +134,7 @@ int main(int argc, char* argv[])
     // Start KCrash
     KCrash::initialize();
 #endif
-    PicHex p = PicHex("/home/jacob/Downloads/UWU.production.hex");
-    qCInfo(mainCategory) << p.applicationData().size();
+    PicHex p = PicHex("/home/jacob/Downloads/UWU.production.hexasd");
     qCInfo(mainCategory) << p.applicationData();
 
     Ping360BootloaderPacket p360bp;
