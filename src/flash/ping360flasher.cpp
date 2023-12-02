@@ -98,7 +98,7 @@ void Ping360Flasher::flash()
     }
 
     // printf("write 0x%08x: ", i * 0x400);
-    if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + i*Ping360BootloaderPacket::PACKET_ROW_LENGTH, i*0x400)) {
+    if (bl_write_program_memory(hex.pic_hex_application_data + i*Ping360BootloaderPacket::PACKET_ROW_LENGTH, i*0x400)) {
       qCInfo(PING360FLASH) << QString("write 0x%1: ok").arg(i*0x400, 8, 16, QChar('0'));
 
     } else {
@@ -109,7 +109,7 @@ void Ping360Flasher::flash()
   }
 
 
-  if (bl_write_program_memory(reinterpret_cast<uint8_t*>(hex.applicationData().data()) + 4*Ping360BootloaderPacket::PACKET_ROW_LENGTH, bootAddress)) {
+  if (bl_write_program_memory(hex.pic_hex_application_data + 4*Ping360BootloaderPacket::PACKET_ROW_LENGTH, bootAddress)) {
     qCInfo(PING360FLASH) << QString("write boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0')) << "ok";
   } else {
     qCCritical(PING360FLASH) << QString("write boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0')) << "error";
@@ -119,7 +119,7 @@ void Ping360Flasher::flash()
 
   printf("\nverifying application...\n");
   uint8_t* verify;
-  for (int i = 4; i < 86; i++) {
+  for (int i = 0; i < 86; i++) {
     if (i >= 1 && i <= 3) {
       continue; // protected boot code
     }
@@ -129,9 +129,9 @@ void Ping360Flasher::flash()
 
     if (bl_read_program_memory(&verify, offset)) {
       for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
-        if (verify[j] != hex.applicationData().data()[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
+        if (verify[j] != hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
           printf("X\nerror: program data differs at 0x%08x: 0x%02x != 0x%02x\n", i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
-                 hex.applicationData().data()[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
+                 hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
           // return 1;
         }
       }
@@ -142,7 +142,7 @@ void Ping360Flasher::flash()
     }
   }
 
-  if (bl_write_configuration_memory(reinterpret_cast<uint8_t*>(hex.configurationData().data()))) {
+  if (bl_write_configuration_memory(hex.pic_hex_configuration_data)) {
     qCInfo(PING360FLASH) << "writing configuration...ok";
   } else {
     qCCritical(PING360FLASH) << "writing configuration...error";

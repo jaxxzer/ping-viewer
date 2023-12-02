@@ -20,10 +20,12 @@ public:
 
     QByteArray applicationData() { return QByteArray(reinterpret_cast<const char*>(pic_hex_application_data), PROGRAM_MEMORY_SIZE); }
     QByteArray configurationData() { return QByteArray(reinterpret_cast<const char*>(pic_hex_configuration_data), CONFIGURATION_MEMORY_SIZE); }
-
-private:
     uint8_t pic_hex_application_data[PROGRAM_MEMORY_SIZE];
     uint8_t pic_hex_configuration_data[CONFIGURATION_MEMORY_SIZE];
+
+private:
+    // uint8_t pic_hex_application_data[PROGRAM_MEMORY_SIZE];
+    // uint8_t pic_hex_configuration_data[CONFIGURATION_MEMORY_SIZE];
 
     bool pic_hex_mem_cpy(ihex_recordset_t *record_set, uint8_t *destination, uint32_t length, uint32_t offset);
     bool pic_hex_extract_application(const char *filename);
