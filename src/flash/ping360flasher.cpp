@@ -3,6 +3,7 @@
 #include "pic-hex.h"
 
 #include <QByteArray>
+#include <QThread>
 #include <QSerialPortInfo>
 
 PING_LOGGING_CATEGORY(PING360FLASH, "ping360.flash")
@@ -11,8 +12,6 @@ PING_LOGGING_CATEGORY(PING360FLASH, "ping360.flash")
 Ping360Flasher::Ping360Flasher()
     : Flasher()
 {
-
-
   // if (!link()->isOpen()) {
   //   qCCritical(PING_PROTOCOL_SENSOR) << "Connection fail !" << conConf << link()->errorString();
   //   emit connectionClose();
@@ -20,15 +19,15 @@ Ping360Flasher::Ping360Flasher()
   // }
 }
 
-void Ping360Flasher::flash()
+void Ping360Flasher::flashh()
 {
-  PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
   printf("hellow world");
+  _port = new QSerialPort();
     QSerialPortInfo pInfo(_link.serialPort());
-    _port.setPort(pInfo);
-    // _port.setBaudRate(_baudRate);
-    _port.setBaudRate(115200);
-    _port.open(QIODevice::ReadWrite);
+    _port->setPort(pInfo);
+    // _port->setBaudRate(_baudRate);
+    _port->setBaudRate(115200);
+    _port->open(QIODevice::ReadWrite);
     // uint8_t a[] = {99, 234, 44, 234};
     // port_write(a, 4);
 
@@ -72,6 +71,7 @@ void Ping360Flasher::flash()
 
  printf("\nloading application from %s...", _firmwareFilePath);
 
+  PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
 
 
 
@@ -106,6 +106,7 @@ void Ping360Flasher::flash()
 
       // return 1;
     }
+    // emit flashProgress(i);
   }
 
 
@@ -179,8 +180,9 @@ Ping360BootloaderPacket::packet_t Ping360Flasher::bl_wait_packet(uint8_t id, uin
 
   uint8_t b;
   while (time_us() < tstop) {
-    _port.waitForReadyRead(10);
-    for (int i = 0; i < _port.bytesAvailable(); i++) {
+    // QThread::msleep(10);
+    _port->waitForReadyRead(10);
+    for (int i = 0; i < _port->bytesAvailable(); i++) {
       if (port_read(&b, 1) > 0) {
         Ping360BootloaderPacket::packet_parse_state_e parseResult = bl_parser.packet_parse_byte(b);
         // qCInfo(PING360FLASH) << parseResult;
@@ -283,9 +285,9 @@ bool Ping360Flasher::bl_reset() {
 
 int Ping360Flasher::port_write(const uint8_t* buffer, int nBytes) {
   // _link.self()->sendData(QByteArray(reinterpret_cast<const char*>(buffer), nBytes));
-  int bytes = _port.write(reinterpret_cast<const char*>(buffer), nBytes);
-  _port.flush();
-  // if (!_port.waitForBytesWritten(1000)) {
+  int bytes = _port->write(reinterpret_cast<const char*>(buffer), nBytes);
+  _port->flush();
+  // if (!_port->waitForBytesWritten(1000)) {
   //   qCCritical(PING360FLASH) << "write timeout";
   // }
   // qCCritical(PING360FLASH) << "wrote" << bytes;
@@ -293,7 +295,7 @@ int Ping360Flasher::port_write(const uint8_t* buffer, int nBytes) {
 }
 
 int Ping360Flasher::port_read(uint8_t* data, int nBytes) {
-  int bytes = _port.read(reinterpret_cast<char*>(data), nBytes);
+  int bytes = _port->read(reinterpret_cast<char*>(data), nBytes);
   // if (bytes > 0) qCCritical(PING360FLASH) << "read" << bytes << "/" << nBytes;
   return bytes;
 }

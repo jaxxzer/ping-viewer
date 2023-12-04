@@ -7,7 +7,6 @@
 #include <QDateTime>
 #include <QLoggingCategory>
 #include <QSerialPort>
-
 Q_DECLARE_LOGGING_CATEGORY(PING360FLASH)
 
 /**
@@ -29,15 +28,15 @@ public:
      *
      */
     ~Ping360Flasher() = default;
-
+public slots:
     /**
      * @brief Start the flash procedure
      *
      */
-    void flash() override;
+    void flashh();
 
 private:
-    QSerialPort _port;
+    QSerialPort* _port;
     int _baudRate = 115200;
     const QList<int> _validBaudRates = {115200};
 

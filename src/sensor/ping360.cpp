@@ -503,12 +503,17 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
 
     qCDebug(PING_PROTOCOL_PING360) << "Finish connection.";
 
+    // flashWorker = new QThread();
+
+    _flasher->moveToThread(&_flashWorker);
+    connect(&_flashWorker, &QThread::started, static_cast<Ping360Flasher*>(_flasher), &Ping360Flasher::flashh);
+
     auto flashSensor = [=] {
         // flasher()->setBaudRate(baud);
         flasher()->setFirmwarePath(fileUrl);
         flasher()->setLink(link()->configuration()[0]);
         flasher()->setVerify(verify);
-        flasher()->flash();
+        _flashWorker.start();
     };
 
     auto finishConnection = [=] {

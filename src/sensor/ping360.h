@@ -866,4 +866,6 @@ private:
      * @param message
      */
     void processMavlinkMessage(const mavlink_message_t& message);
+
+    QThread _flashWorker;
 };
