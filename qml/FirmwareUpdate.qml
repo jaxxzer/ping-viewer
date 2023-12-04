@@ -16,30 +16,13 @@ RowLayout {
     property var running: false
 
     Connections {
-        function onFlashProgress(progress) {
+        function onFlashProgressChanged(progress) {
             running = true;
             flashProgress.value = progress;
         }
 
-        function onStateChanged(state) {
-            switch (state) {
-            case Flasher.Error:
-                print("Flash procedure failed!");
-                print("Error: ", ping.flasher.message);
-            case Flasher.FlashFinished:
-                running = false;
-                flashProgress.value = 0;
-                break;
-            case Flasher.Flashing:
-            case Flasher.StartingFlash:
-                running = true;
-                break;
-            default:
-                running = true;
-            }
-        }
 
-        target: ping ? ping.flasher : null
+        target: ping
     }
 
     PingGroupBox {

@@ -106,7 +106,7 @@ void Ping360Flasher::flashh()
 
       // return 1;
     }
-    // emit flashProgress(i);
+    emit flashProgress(50 * i / 86.0f);
   }
 
 
@@ -141,6 +141,7 @@ void Ping360Flasher::flashh()
       printf("error\n");
       // return 1;
     }
+    emit flashProgress(50 + 50 * i / 86.0f);
   }
 
   if (bl_write_configuration_memory(hex.pic_hex_configuration_data)) {
