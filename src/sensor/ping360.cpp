@@ -528,15 +528,15 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
     };
     QTimer::singleShot(250, finishConnection);
 
-    // // Clear last configuration src ID to detect device as a new one
-    // connect(&_flasher, &Flasher::stateChanged, this, [this] {
-    //     if (flasher()->state() == Flasher::States::FlashFinished) {
-    //         QThread::msleep(500);
-    //         // Clear last configuration src ID to detect device as a new one
-    //         resetSensorLocalVariables();
-    //         Sensor::connectLink(*link()->configuration());
-    //     }
-    // });
+    // Clear last configuration src ID to detect device as a new one
+    connect(_flasher, &Flasher::stateChanged, this, [this] {
+        if (flasher()->state() == Flasher::States::FlashFinished) {
+            QThread::msleep(500);
+            // Clear last configuration src ID to detect device as a new one
+            resetSensorLocalVariables();
+            Sensor::connectLink(*link()->configuration());
+        }
+    });
 }
 
 void Ping360::setLastSensorConfiguration()

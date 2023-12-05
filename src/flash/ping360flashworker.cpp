@@ -20,6 +20,8 @@ Ping360FlashWorker::Ping360FlashWorker()
 
 void Ping360FlashWorker::run()
 {
+    int flashProgressPercentFactor = _verify ? 50 : 100;
+    emit stateChanged(Flasher::StartingFlash);
     printf("hellow world");
     _port = new QSerialPort();
     QSerialPortInfo pInfo(_link.serialPort());
@@ -75,6 +77,8 @@ void Ping360FlashWorker::run()
     uint8_t zeros[Ping360BootloaderPacket::PACKET_ROW_LENGTH];
     memset(zeros, 0xff, sizeof(zeros));
     const uint32_t bootAddress = 0x1000;
+
+    emit stateChanged(Flasher::Flashing);
     printf("\nwipe boot address 0x%08x...", bootAddress);
     if (bl_write_program_memory(zeros, bootAddress)) {
         printf("ok\n");
@@ -103,7 +107,7 @@ void Ping360FlashWorker::run()
 
             // return 1;
         }
-        emit flashProgressChanged(50 * i / 86.0f);
+        emit flashProgressChanged(flashProgressPercentFactor * i / 86.0f);
     }
 
     if (bl_write_program_memory(
@@ -115,32 +119,35 @@ void Ping360FlashWorker::run()
         // return 1;
     }
 
-    printf("\nverifying application...\n");
-    uint8_t* verify;
-    for (int i = 0; i < 86; i++) {
-        if (i >= 1 && i <= 3) {
-            continue; // protected boot code
-        }
-        uint32_t offset = i * 0x400;
-        bool verify_ok = true;
-        printf("verify 0x%08x: ", offset);
+    if (_verify) {
+      printf("\nverifying application...\n");
+          uint8_t* verify;
+          for (int i = 0; i < 86; i++) {
+              if (i >= 1 && i <= 3) {
+                  continue; // protected boot code
+              }
+              uint32_t offset = i * 0x400;
+              bool verify_ok = true;
+              printf("verify 0x%08x: ", offset);
 
-        if (bl_read_program_memory(&verify, offset)) {
-            for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
-                if (verify[j] != hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
-                    printf("X\nerror: program data differs at 0x%08x: 0x%02x != 0x%02x\n",
-                        i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
-                        hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
-                    // return 1;
-                }
-            }
-            printf("ok\n");
-        } else {
-            printf("error\n");
-            // return 1;
-        }
-        emit flashProgressChanged(50 + 50 * i / 86.0f);
+              if (bl_read_program_memory(&verify, offset)) {
+                  for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
+                      if (verify[j] != hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
+                          printf("X\nerror: program data differs at 0x%08x: 0x%02x != 0x%02x\n",
+                              i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
+                              hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
+                          // return 1;
+                      }
+                  }
+                  printf("ok\n");
+              } else {
+                  printf("error\n");
+                  // return 1;
+              }
+              emit flashProgressChanged(flashProgressPercentFactor + flashProgressPercentFactor * i / 86.0f);
+          }
     }
+    
 
     if (bl_write_configuration_memory(hex.pic_hex_configuration_data)) {
         qCInfo(PING360FLASHWORKER) << "writing configuration...ok";
@@ -149,12 +156,17 @@ void Ping360FlashWorker::run()
         // return 1;
     }
 
+    emit flashProgressChanged(100.0f);
+
     if (bl_reset()) {
         qCInfo(PING360FLASHWORKER) << "starting application...ok";
     } else {
         qCCritical(PING360FLASHWORKER) << "starting application...error";
         // return 1;
     }
+
+    _port->close();
+    emit stateChanged(Flasher::FlashFinished);
 }
 
 #define BL_TIMEOUT_DEFAULT_US 750000

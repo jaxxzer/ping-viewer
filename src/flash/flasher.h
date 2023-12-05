@@ -3,6 +3,7 @@
 #include "linkconfiguration.h"
 
 #include <QLoggingCategory>
+
 #include <QProcess>
 
 Q_DECLARE_LOGGING_CATEGORY(FLASH)
@@ -127,3 +128,5 @@ private:
     States _state = Idle;
     const QList<int> _validBaudRates = {57600, 115200, 230400};
 };
+
+Q_DECLARE_METATYPE(Flasher::States);

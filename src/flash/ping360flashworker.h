@@ -38,6 +38,8 @@ public:
     void run() override final;
 
 signals:
+    void messageChanged(QString message);
+    void stateChanged(Flasher::States state);
     void flashProgressChanged(float flashPercent);
 
 private:

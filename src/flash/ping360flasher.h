@@ -17,7 +17,6 @@ public:
     /**
      * @brief Construct a new Ping360Flasher object
      *
-     * @param parent
      */
     Ping360Flasher();
 

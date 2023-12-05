@@ -8,6 +8,9 @@ Ping360Flasher::Ping360Flasher()
 {
     connect(&_worker, &Ping360FlashWorker::flashProgressChanged, this,
         [this](float flashProgressPct) { emit flashProgress(flashProgressPct); });
+    connect(&_worker, &Ping360FlashWorker::stateChanged, this,
+        [this](Flasher::States newState) { qCCritical(PING360FLASH) << newState; emit stateChanged(newState);
+        qCCritical(PING360FLASH) << newState; });
 }
 
 void Ping360Flasher::flash()
