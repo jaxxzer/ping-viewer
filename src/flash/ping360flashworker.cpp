@@ -37,8 +37,8 @@ void Ping360FlashWorker::run()
     if (bl_read_device_id(&id)) {
         printf(" > device id: 0x%04x <\n", id);
     } else {
-        printf("error fetching device id\n");
-        // return 1;
+        error("error fetching device id");
+        return;
     }
 
     // printf("\nfetch device id...\n");
@@ -55,10 +55,10 @@ void Ping360FlashWorker::run()
         if (version.message.version_major != expectedVersionMajor
             || version.message.version_minor != expectedVersionMinor
             || version.message.version_patch != expectedVersionPatch) {
-            printf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d\n", version.message.version_major,
+            error(QString::asprintf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d", version.message.version_major,
                 version.message.version_minor, version.message.version_patch, expectedVersionMajor,
-                expectedVersionMinor, expectedVersionPatch);
-            // return 1;
+                expectedVersionMinor, expectedVersionPatch));
+            return;
         }
 
         printf(" > device type 0x%02x : hardware revision %c : bootloader v%d.%d.%d <\n", version.message.device_type,
@@ -66,8 +66,8 @@ void Ping360FlashWorker::run()
             version.message.version_patch);
 
     } else {
-        printf("error fetching version\n");
-        // return 1;
+        error("error fetching version");
+        return;
     }
 
     printf("\nloading application from %s...", _firmwareFilePath);
@@ -83,8 +83,8 @@ void Ping360FlashWorker::run()
     if (bl_write_program_memory(zeros, bootAddress)) {
         printf("ok\n");
     } else {
-        printf("error\n");
-        // return 1;
+        error("error wiping boot address");
+        return;
     }
 
     // printf("\nwriting application...\n");
@@ -97,15 +97,12 @@ void Ping360FlashWorker::run()
             continue; // we write this page last, to prevent booting after failed programming
         }
 
-        // printf("write 0x%08x: ", i * 0x400);
         if (bl_write_program_memory(
                 hex.pic_hex_application_data + i * Ping360BootloaderPacket::PACKET_ROW_LENGTH, i * 0x400)) {
             qCInfo(PING360FLASHWORKER) << QString("write 0x%1: ok").arg(i * 0x400, 8, 16, QChar('0'));
-
         } else {
-            qCCritical(PING360FLASHWORKER) << QString("write 0x%1: error").arg(i * 0x400, 8, 16, QChar('0'));
-
-            // return 1;
+            error(QString("write 0x%1: error").arg(i * 0x400, 8, 16, QChar('0')));
+            return;
         }
         emit flashProgressChanged(flashProgressPercentFactor * i / 86.0f);
     }
@@ -114,9 +111,8 @@ void Ping360FlashWorker::run()
             hex.pic_hex_application_data + 4 * Ping360BootloaderPacket::PACKET_ROW_LENGTH, bootAddress)) {
         qCInfo(PING360FLASHWORKER) << QString("write boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0')) << "ok";
     } else {
-        qCCritical(PING360FLASHWORKER) << QString("write boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0'))
-                                       << "error";
-        // return 1;
+        error(QString("error writing boot address 0x%1...").arg(bootAddress, 8, 16, QChar('0')));
+        return;
     }
 
     if (_verify) {
@@ -141,31 +137,33 @@ void Ping360FlashWorker::run()
                   }
                   printf("ok\n");
               } else {
-                  printf("error\n");
-                  // return 1;
+                  error("error reading program memory");
+                  return;
               }
               emit flashProgressChanged(flashProgressPercentFactor + flashProgressPercentFactor * i / 86.0f);
           }
     }
     
-
     if (bl_write_configuration_memory(hex.pic_hex_configuration_data)) {
         qCInfo(PING360FLASHWORKER) << "writing configuration...ok";
     } else {
-        qCCritical(PING360FLASHWORKER) << "writing configuration...error";
-        // return 1;
+        error("error writing configuration memory");
+        return;
     }
 
+    // flash is complete
     emit flashProgressChanged(100.0f);
 
     if (bl_reset()) {
         qCInfo(PING360FLASHWORKER) << "starting application...ok";
     } else {
         qCCritical(PING360FLASHWORKER) << "starting application...error";
-        // return 1;
+        error("error starting pin360 main application");
+        return;
     }
 
     _port->close();
+
     emit stateChanged(Flasher::FlashFinished);
 }
 
@@ -318,4 +316,10 @@ int Ping360FlashWorker::port_read(uint8_t* data, int nBytes)
     int bytes = _port->read(reinterpret_cast<char*>(data), nBytes);
     // if (bytes > 0) qCCritical(PING360FLASHWORKER) << "read" << bytes << "/" << nBytes;
     return bytes;
+}
+
+void Ping360FlashWorker::error(const QString message)
+{
+  emit messageChanged(message);
+  emit stateChanged(Flasher::Error);
 }

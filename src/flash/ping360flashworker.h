@@ -62,7 +62,7 @@ private:
     bool bl_write_configuration_memory(const uint8_t* data);
 
     bool bl_reset();
-
+    void error(QString message);
     const uint16_t expectedDeviceId = 0x062f;
     const uint8_t expectedVersionMajor = 2;
     const uint8_t expectedVersionMinor = 1;
