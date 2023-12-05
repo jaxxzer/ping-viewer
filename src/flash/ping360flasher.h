@@ -1,7 +1,6 @@
 #pragma once
 
 #include "flasher.h"
-#include "link.h"
 #include "ping360flashworker.h"
 
 #include <QLoggingCategory>

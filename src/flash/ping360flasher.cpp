@@ -1,10 +1,5 @@
 #include "ping360flasher.h"
 #include "logger.h"
-#include "pic-hex.h"
-
-#include <QByteArray>
-#include <QSerialPortInfo>
-#include <QThread>
 
 PING_LOGGING_CATEGORY(PING360FLASH, "ping360.flash")
 
