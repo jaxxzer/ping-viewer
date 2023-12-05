@@ -505,15 +505,15 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
 
     // flashWorker = new QThread();
 
-    _flasher->moveToThread(&_flashWorker);
-    connect(&_flashWorker, &QThread::started, static_cast<Ping360Flasher*>(_flasher), &Ping360Flasher::flashh);
-    connect(_flasher, &Ping360Flasher::flashProgress, this, &PingSensor::flashProgressChangedRelay);
+    // _flasher->moveToThread(&_flashWorker);
+    // connect(&_flashWorker, &QThread::started, static_cast<Ping360Flasher*>(_flasher), &Ping360Flasher::flashh);
+    // connect(_flasher, &Ping360Flasher::flashProgress, this, &PingSensor::flashProgressChangedRelay);
     auto flashSensor = [=] {
         // flasher()->setBaudRate(baud);
         flasher()->setFirmwarePath(fileUrl);
         flasher()->setLink(link()->configuration()[0]);
         flasher()->setVerify(verify);
-        _flashWorker.start();
+        flasher()->flash();
     };
 
     auto finishConnection = [=] {

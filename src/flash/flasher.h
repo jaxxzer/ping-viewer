@@ -112,8 +112,9 @@ signals:
     void stateChanged(Flasher::States state);
 
 protected:
-    LinkConfiguration _link;
     QString _firmwareFilePath;
+    LinkConfiguration _link;
+    bool _verify = true;
 
 private:
     void firmwareUpdatePercentage(const QString& output);
@@ -125,5 +126,4 @@ private:
     QString _message;
     States _state = Idle;
     const QList<int> _validBaudRates = {57600, 115200, 230400};
-    bool _verify = true;
 };

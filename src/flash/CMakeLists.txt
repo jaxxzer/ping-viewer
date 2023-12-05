@@ -12,6 +12,7 @@ add_library(
 STATIC
     flasher.cpp
     ping360flasher.cpp
+    ping360flashworker.cpp
     pic-hex.cpp
     packet.cpp
     ${LIBCINTELHEXFILES}
