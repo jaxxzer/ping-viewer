@@ -168,9 +168,8 @@ signals:
     void srcIdChanged();
     void flashProgressChanged(float progress);
 public slots:
-    void flashProgressChangedRelay(float progress) {
-        emit flashProgressChanged(progress);
-    }
+    void flashProgressChangedRelay(float progress) { emit flashProgressChanged(progress); }
+
 protected:
     /**
      * @brief Handle new ping protocol messages

@@ -483,7 +483,7 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
 
     // Stop requests and messages from the sensor
     _timeoutProfileMessage.stop();
-    //setPingFrequency(0);
+    // setPingFrequency(0);
 
     if (sendPingGotoBootloader) {
         qCDebug(PING_PROTOCOL_PING360) << "Put it in bootloader mode.";

@@ -31,26 +31,16 @@ public:
      */
     ~Ping360FlashWorker() = default;
 
-    void setFirmwarePath(QString firmwareFilePath)
-    {
-        _firmwareFilePath = firmwareFilePath;
-    }
-    void setLink(LinkConfiguration link)
-    {
-        _link = link;
-    }
-    void setVerify(bool verify)
-    {
-        _verify = verify;
-    }
+    void setFirmwarePath(QString firmwareFilePath) { _firmwareFilePath = firmwareFilePath; }
+    void setLink(LinkConfiguration link) { _link = link; }
+    void setVerify(bool verify) { _verify = verify; }
 
-void run() override final;
+    void run() override final;
 
 signals:
     void flashProgressChanged(float flashPercent);
 
 private:
-
     QString _firmwareFilePath;
     LinkConfiguration _link;
     bool _verify = true;
@@ -62,16 +52,16 @@ private:
     void bl_write_packet(const packet_t packet);
     packet_t bl_wait_packet(uint8_t id, uint32_t timeout_us);
 
-    bool bl_read_device_id(uint16_t *device_id);
-    bool bl_read_version(Ping360BootloaderPacket::packet_rsp_version_t *version);
-    bool bl_read_program_memory(uint8_t **data, uint32_t address);
+    bool bl_read_device_id(uint16_t* device_id);
+    bool bl_read_version(Ping360BootloaderPacket::packet_rsp_version_t* version);
+    bool bl_read_program_memory(uint8_t** data, uint32_t address);
 
-    bool bl_write_program_memory(const uint8_t *data, uint32_t address);
-    bool bl_write_configuration_memory(const uint8_t *data);
+    bool bl_write_program_memory(const uint8_t* data, uint32_t address);
+    bool bl_write_configuration_memory(const uint8_t* data);
 
     bool bl_reset();
 
-    const uint16_t expectedDeviceId    = 0x062f;
+    const uint16_t expectedDeviceId = 0x062f;
     const uint8_t expectedVersionMajor = 2;
     const uint8_t expectedVersionMinor = 1;
     const uint8_t expectedVersionPatch = 2;
@@ -79,7 +69,7 @@ private:
     Ping360BootloaderPacket bl_parser;
 
     qint64 time_us() { return QDateTime::currentMSecsSinceEpoch() * 1000; };
-    int port_write(const uint8_t *buffer, int nBytes);
+    int port_write(const uint8_t* buffer, int nBytes);
     int port_read(uint8_t* data, int nBytes);
     // AbstractLink* link() const { return _link.data() ? _link->self() : nullptr; };
 };
