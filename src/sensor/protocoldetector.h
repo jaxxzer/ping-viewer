@@ -126,4 +126,5 @@ private:
     QByteArray _deviceInformationMessageByteArray;
     PingParserExt _parser;
     Ping360BootloaderPacket _ping360BootloaderPacket;
+    mutable qint64 _lastLinkUpdateTimeMs;
 };
