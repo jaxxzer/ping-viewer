@@ -169,6 +169,23 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
         _detected = checkBuffer(port.readAll(), linkConf);
     }
 
+    // Probe for Ping360 Bootloader
+
+
+    Ping360BootloaderPacket::packet_cmd_read_dev_id_t readDevId = Ping360BootloaderPacket::packet_cmd_read_dev_id_init;
+    Ping360BootloaderPacket::packet_update_footer(readDevId.data);
+    port.write(reinterpret_cast<const char*>(readDevId.data), Ping360BootloaderPacket::packet_get_length(readDevId.data));
+
+    port.waitForBytesWritten(100);
+
+    attempts = 0;
+
+    // Try to get a valid response, timeout after 10 * 50 ms
+    while (_active && !_detected && attempts++ < 2) {
+        port.waitForReadyRead(50);
+        _detected = checkBuffer(port.readAll(), linkConf);
+    }
+
     port.close();
 
     return _detected;
@@ -206,7 +223,7 @@ bool ProtocolDetector::checkUdp(LinkConfiguration& linkConf)
 
     int attempts = 0;
 
-    // Try to get a valid response, timeout after 10 * 50 ms
+    // Try to get a valid response, timeout after 20 * 50 ms
     while (_active && !_detected && attempts++ < 20) {
         socket.waitForReadyRead(50);
         /**
@@ -257,6 +274,13 @@ bool ProtocolDetector::checkBuffer(const QByteArray& buffer, LinkConfiguration& 
             }
             return true;
         }
+        if (_ping360BootloaderPacket.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE)
+        {
+            qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "found ping360 bootloader";
+            linkConf.setDeviceType(PingDeviceType::PING360);
+            return true;
+        }
+
     }
     return false;
 }
