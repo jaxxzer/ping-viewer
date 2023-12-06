@@ -173,6 +173,7 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
 
     // no ping device, check for ping360 bootloader
     if (!_detected) {
+
         // Probe for Ping360 Bootloader
         Ping360BootloaderPacket::packet_cmd_read_dev_id_t readDevId = Ping360BootloaderPacket::packet_cmd_read_dev_id_init;
         Ping360BootloaderPacket::packet_update_footer(readDevId.data);
@@ -181,8 +182,10 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
 
         attempts = 0;
         // Try to get a valid response, timeout after 2 * 50 ms
+        _ping360BootloaderPacket.reset();
+
         while (_active && !_detected && attempts++ < 2) {
-            port.waitForReadyRead(50);
+            port.waitForReadyRead(100);
             _detected = checkBuffer(port.readAll(), linkConf);
         }
 
@@ -199,6 +202,8 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
 
             port.waitForBytesWritten(100);
             port.waitForReadyRead(100);
+            _ping360BootloaderPacket.reset();
+
             if (checkBuffer(port.readAll(), linkConf)) {
                 qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "got response to reset command";
             }
@@ -297,7 +302,6 @@ bool ProtocolDetector::checkBuffer(const QByteArray& buffer, LinkConfiguration& 
             }
             return true;
         }
-        // _ping360BootloaderPacket.reset();
         if (_ping360BootloaderPacket.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE)
         {
             qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "received ping360 bootloader packet";
