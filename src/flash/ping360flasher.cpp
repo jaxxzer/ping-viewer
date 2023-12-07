@@ -13,7 +13,7 @@ Ping360Flasher::Ping360Flasher(QObject* parent)
     connect(&_worker, &Ping360FlashWorker::messageChanged, this,
         [this](QString message) { 
             setMessage(message); 
-        qCCritical(PING360FLASH) << message; });
+            qCDebug(PING360FLASH) << message; });
 }
 
 void Ping360Flasher::flash()
