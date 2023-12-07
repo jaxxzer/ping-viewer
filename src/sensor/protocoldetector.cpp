@@ -166,7 +166,7 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
     int attempts = 0;
 
     // Try to get a valid response, timeout after 10 * 50 ms
-    while (_active && !_detected && attempts++ < 2) {
+    while (_active && !_detected && attempts++ < 10) {
         port.waitForReadyRead(50);
         _detected = checkBuffer(port.readAll(), linkConf);
     }
@@ -184,7 +184,7 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
         // Try to get a valid response, timeout after 2 * 50 ms
         _ping360BootloaderPacket.reset();
 
-        while (_active && !_detected && attempts++ < 2) {
+        while (_active && !_detected && attempts++ < 10) {
             port.waitForReadyRead(100);
             _detected = checkBuffer(port.readAll(), linkConf);
         }
@@ -195,10 +195,17 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
         if (_detected) {
                 qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "resetting processor";
 
-                Ping360BootloaderPacket::packet_cmd_reset_processor_t resetProcessor
-            = Ping360BootloaderPacket::packet_cmd_reset_processor_init;
-        Ping360BootloaderPacket::packet_update_footer(resetProcessor.data);
-                port.write(reinterpret_cast<const char*>(resetProcessor.data), Ping360BootloaderPacket::packet_get_length(resetProcessor.data));
+        //         Ping360BootloaderPacket::packet_cmd_reset_processor_t resetProcessor
+        //     = Ping360BootloaderPacket::packet_cmd_reset_processor_init;
+        // Ping360BootloaderPacket::packet_update_footer(resetProcessor.data);
+        //         port.write(reinterpret_cast<const char*>(resetProcessor.data), Ping360BootloaderPacket::packet_get_length(resetProcessor.data));
+
+
+                Ping360BootloaderPacket::packet_cmd_jump_start_t jumpStart
+            = Ping360BootloaderPacket::packet_cmd_jump_start_init;
+        Ping360BootloaderPacket::packet_update_footer(jumpStart.data);
+                port.write(reinterpret_cast<const char*>(jumpStart.data), Ping360BootloaderPacket::packet_get_length(jumpStart.data));
+
 
             port.waitForBytesWritten(100);
             port.waitForReadyRead(100);
@@ -207,7 +214,6 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
             if (checkBuffer(port.readAll(), linkConf)) {
                 qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "got response to reset command";
             }
-            // QThread::msleep(100);
         }
     }
 

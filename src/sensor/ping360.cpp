@@ -55,7 +55,7 @@ const float Ping360::_angularSpeedGradPerMs = 400.0f / 2400.0f;
 Ping360::Ping360()
     : PingSensor(PingDeviceType::PING360)
 {
-    _flasher = new Ping360Flasher();
+    _flasher = new Ping360Flasher(nullptr);
     // QVector crashs when constructed in initialization list
     _data = QVector<double>(_maxNumberOfPoints, 0);
 
@@ -129,6 +129,16 @@ Ping360::Ping360()
 
     // By default heading integration is enabled
     enableHeadingIntegration(true);
+
+    connect(this, &Ping360::firmwareVersionMinorChanged, this, [this] {
+        // Wait for firmware information to be available before looking for new versions
+        static bool once = false;
+        if (!once) {
+            once = true;
+            NetworkTool::self()->checkNewFirmware(
+                "ping360", std::bind(&Ping360::checkNewFirmwareInGitHubPayload, this, std::placeholders::_1));
+        }
+    });
 }
 
 void Ping360::startPreConfigurationProcess()
@@ -558,8 +568,33 @@ void Ping360::printSensorInformation() const
 
 void Ping360::checkNewFirmwareInGitHubPayload(const QJsonDocument& jsonDocument)
 {
-    Q_UNUSED(jsonDocument)
-    // TODO
+   float lastVersionAvailable = 0.0;
+
+    auto filesPayload = jsonDocument.array();
+    for (const QJsonValue& filePayload : filesPayload) {
+        qCDebug(PING_PROTOCOL_PING360) << filePayload["name"].toString();
+
+        // Get version from Ping[_|-]V(major).(patch)*.hex where (major).(patch) is <version>
+        static const QRegularExpression versionRegex(QStringLiteral(R"(Ping360[_|-]V(?<version>\d+\.\d+).*\.hex)"));
+        auto filePayloadVersion = versionRegex.match(filePayload["name"].toString()).captured("version").toFloat();
+        _firmwares[filePayload["name"].toString()] = filePayload["download_url"].toString();
+
+        if (filePayloadVersion > lastVersionAvailable) {
+            lastVersionAvailable = filePayloadVersion;
+        }
+    }
+    emit firmwaresAvailableChanged();
+
+    auto sensorVersion = QString("%1.%2")
+                             .arg(_commonVariables.deviceInformation.firmware_version_major)
+                             .arg(_commonVariables.deviceInformation.firmware_version_minor)
+                             .toFloat();
+    static QString firmwareUpdateSteps {"https://github.com/bluerobotics/ping-viewer/wiki/firmware-update"};
+    if (lastVersionAvailable > sensorVersion) {
+        QString newVersionText = QStringLiteral("Firmware update for Ping available: %1<br>").arg(lastVersionAvailable)
+            + QStringLiteral("<a href=\"%1\">Check firmware update steps here!</a>").arg(firmwareUpdateSteps);
+        NotificationManager::self()->create(newVersionText, "green", StyleManager::infoIcon());
+    }
 }
 
 void Ping360::resetSensorLocalVariables()

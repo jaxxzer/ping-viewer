@@ -18,7 +18,7 @@ public:
      * @brief Construct a new Ping360Flasher object
      *
      */
-    Ping360Flasher();
+    Ping360Flasher(QObject* parent);
 
     /**
      * @brief Destroy the Ping360Flasher object

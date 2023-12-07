@@ -71,7 +71,8 @@ RowLayout {
                     id: baudComboBox
 
                     // This should use the same values in Flasher::_validBaudRates
-                    model: [57600, 115200, 230400]
+                    //model: [57600, 115200, 230400]
+                    model: ping.flasher.validBaudRates
                     Layout.fillWidth: true
                     visible: SettingsManager.debugMode
                 }

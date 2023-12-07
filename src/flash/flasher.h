@@ -20,7 +20,7 @@ public:
      *
      * @param parent
      */
-    Flasher(QObject* parent = nullptr);
+    Flasher(QObject* parent = nullptr, const QList<QVariant> validBaudRates = {57600, 115200, 230400});
 
     /**
      * @brief Destroy the Flasher object
@@ -73,6 +73,9 @@ public:
     Flasher::States state() const { return _state; };
     Q_PROPERTY(Flasher::States state READ state NOTIFY stateChanged)
 
+    const QVariantList& validBaudRates() const { return _validBaudRates; };
+    Q_PROPERTY(QVariant validBaudRates READ validBaudRates CONSTANT);
+
     /**
      * @brief Start the flash procedure
      *
@@ -116,6 +119,7 @@ protected:
     QString _firmwareFilePath;
     LinkConfiguration _link;
     bool _verify = true;
+    const QList<QVariant> _validBaudRates;
 
 private:
     void firmwareUpdatePercentage(const QString& output);
@@ -126,7 +130,6 @@ private:
     QSharedPointer<QProcess> _firmwareProcess;
     QString _message;
     States _state = Idle;
-    const QList<int> _validBaudRates = {57600, 115200, 230400};
 };
 
 Q_DECLARE_METATYPE(Flasher::States);
