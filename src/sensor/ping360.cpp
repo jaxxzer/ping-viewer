@@ -144,6 +144,8 @@ Ping360::Ping360()
 
 void Ping360::checkBootloader()
 {
+    _isBootloader = false;
+    emit isBootloaderChanged();
     if (!link()) {
         return;
     }
@@ -156,6 +158,8 @@ void Ping360::checkBootloader()
     if (!link()->isWritable()) {
         return;
     }
+
+    qCDebug(PING_PROTOCOL_PING360) << "checking for bootloader...";
     _ping360BootloaderPacketParser.reset();
     Ping360BootloaderPacket::packet_cmd_read_version_t readVersion
         = Ping360BootloaderPacket::packet_cmd_read_version_init;
@@ -164,6 +168,7 @@ void Ping360::checkBootloader()
     QMetaObject::Connection blScanCallback = connect(link(), &AbstractLink::newData, this, [this](const QByteArray& data) {
         for (auto byte : data) {
             if (_ping360BootloaderPacketParser.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
+                qCDebug(PING_PROTOCOL_PING360) << "Bootloader found!";
                 _isBootloader = true;
                 emit isBootloaderChanged();
             }

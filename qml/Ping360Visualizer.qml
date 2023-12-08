@@ -246,7 +246,7 @@ Item {
                 visible: false
             }
 
-            /*Text {
+            Text {
                 id: bootloaderWarning
 
                 visible: ping.isBootloader
@@ -260,7 +260,7 @@ Item {
                 z: 100
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-            }*/
+            }
 
             Text {
                 id: mouseReadout
