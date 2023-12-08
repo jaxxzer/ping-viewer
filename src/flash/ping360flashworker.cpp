@@ -59,7 +59,7 @@ void Ping360FlashWorker::run()
         return;
     }
 
-    qCInfo(PING360FLASHWORKER) << QString::asprintf("loading ping360 firmware from %s...", _firmwareFilePath);
+    qCInfo(PING360FLASHWORKER) << QString::asprintf("loading ping360 firmware from %s...", _firmwareFilePath.toLocal8Bit().data());
 
     PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
 
@@ -122,7 +122,7 @@ void Ping360FlashWorker::run()
               if (bl_read_program_memory(&verify, offset)) {
                   for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
                       if (verify[j] != hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
-                          qCWarning(PING360FLASHWORKER) << QString::asprintf("error: program data differs at 0x%08x: 0x%02x != 0x%02x\n",
+                          qCWarning(PING360FLASHWORKER) << QString::asprintf("error: program data differs at 0x%08llx: 0x%02x != 0x%02x\n",
                               i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
                               hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
                       }
