@@ -65,7 +65,8 @@ Ping360::Ping360()
     setSensorVisualizer({"qrc:/Ping360Visualizer.qml"});
     setSensorStatusModel({"qrc:/Ping360StatusModel.qml"});
 
-    connect(this, &Sensor::connectionOpen, this, &Ping360::startPreConfigurationProcess);
+    connect(this, &Sensor::connectionOpen, this, &Ping360::checkBootloader);
+    // connect(this, &Sensor::connectionOpen, this, &Ping360::startPreConfigurationProcess);
 
     // Add timer for worst case scenario
     _timeoutProfileMessage.setInterval(_sensorTimeout);
@@ -114,7 +115,7 @@ Ping360::Ping360()
 
             if (_commonVariables.deviceInformation.firmware_version_major == 3
                 && _commonVariables.deviceInformation.firmware_version_minor == 3
-                && _commonVariables.deviceInformation.firmware_version_patch == 1) {
+                && _commonVariables.deviceInformation.firmware_version_patch == 2) {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::AutoTransmitAsync;
             } else {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::Legacy;
@@ -139,6 +140,42 @@ Ping360::Ping360()
                 "ping360", std::bind(&Ping360::checkNewFirmwareInGitHubPayload, this, std::placeholders::_1));
         }
     });
+}
+
+void Ping360::checkBootloader()
+{
+    if (!link()) {
+        return;
+    }
+    if (link()->type() != LinkType::Serial) {
+        return;
+    }
+    if (!link()->isOpen()) {
+        return;
+    }
+    if (!link()->isWritable()) {
+        return;
+    }
+    _ping360BootloaderPacketParser.reset();
+    Ping360BootloaderPacket::packet_cmd_read_version_t readVersion
+        = Ping360BootloaderPacket::packet_cmd_read_version_init;
+    Ping360BootloaderPacket::packet_update_footer(readVersion.data);
+    link()->write(reinterpret_cast<const char*>(readVersion.data), Ping360BootloaderPacket::packet_get_length(readVersion.data));
+    QMetaObject::Connection blScanCallback = connect(link(), &AbstractLink::newData, this, [this](const QByteArray& data) {
+        for (auto byte : data) {
+            if (_ping360BootloaderPacketParser.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
+                _isBootloader = true;
+                emit isBootloaderChanged();
+            }
+
+        }
+    });
+
+    QTimer::singleShot(250, [=] {
+        disconnect(blScanCallback);
+        startPreConfigurationProcess();
+    });
+
 }
 
 void Ping360::startPreConfigurationProcess()

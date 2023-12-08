@@ -115,7 +115,7 @@ void Ping360FlashWorker::run()
           uint8_t* verify;
           for (int i = 0; i < 86; i++) {
               if (i >= 1 && i <= 3) {
-                  continue; // protected boot code
+                  continue; // protected bootloader code
               }
               uint32_t offset = i * 0x400;
               bool verify_ok = true;

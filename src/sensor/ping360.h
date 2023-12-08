@@ -9,6 +9,7 @@
 #include <QTimer>
 
 #include "mavlinkmanager.h"
+#include "packet.h"
 #include "parser.h"
 #include "ping-message-common.h"
 #include "ping-message-ping360.h"
@@ -435,6 +436,8 @@ public:
     float heading() const { return _heading; }
     Q_PROPERTY(float heading READ heading NOTIFY headingChanged)
 
+    bool isBootloader() {return _isBootloader; }
+    Q_PROPERTY(bool isBootloader READ isBootloader NOTIFY isBootloaderChanged)
     /**
      * @brief adjust the transmit duration according to automatic mode, and current configuration
      */
@@ -548,6 +551,7 @@ signals:
     void transmitDurationChanged();
     void transmitDurationMaxChanged();
     void transmitFrequencyChanged();
+    void isBootloaderChanged();
     ///@}
 
 private:
@@ -868,4 +872,8 @@ private:
     void processMavlinkMessage(const mavlink_message_t& message);
 
     QThread _flashWorker;
+    void checkBootloader();
+    Ping360BootloaderPacket _ping360BootloaderPacketParser;
+    bool _isBootloader = false;
+
 };
