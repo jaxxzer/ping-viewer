@@ -144,6 +144,7 @@ Ping360::Ping360()
 
 void Ping360::checkBootloader()
 {
+    qCWarning(PING_PROTOCOL_PING360) << "CHECKBOOTLOADER";
     _isBootloader = false;
     emit isBootloaderChanged();
     if (!link()) {
@@ -159,18 +160,20 @@ void Ping360::checkBootloader()
         return;
     }
 
-    qCDebug(PING_PROTOCOL_PING360) << "checking for bootloader...";
-    _ping360BootloaderPacketParser.reset();
+    qCWarning(PING_PROTOCOL_PING360) << "checking for bootloader...";
     Ping360BootloaderPacket::packet_cmd_read_version_t readVersion
         = Ping360BootloaderPacket::packet_cmd_read_version_init;
     Ping360BootloaderPacket::packet_update_footer(readVersion.data);
     link()->write(reinterpret_cast<const char*>(readVersion.data), Ping360BootloaderPacket::packet_get_length(readVersion.data));
+    _ping360BootloaderPacketParser.reset();
+
     QMetaObject::Connection blScanCallback = connect(link(), &AbstractLink::newData, this, [this](const QByteArray& data) {
         for (auto byte : data) {
             if (_ping360BootloaderPacketParser.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
-                qCDebug(PING_PROTOCOL_PING360) << "Bootloader found!";
+                qCWarning(PING_PROTOCOL_PING360) << "bootloader found!";
                 _isBootloader = true;
                 emit isBootloaderChanged();
+                emit firmwareVersionMinorChanged();
             }
 
         }
@@ -180,11 +183,11 @@ void Ping360::checkBootloader()
         disconnect(blScanCallback);
         startPreConfigurationProcess();
     });
-
 }
 
 void Ping360::startPreConfigurationProcess()
 {
+    qCWarning(PING_PROTOCOL_PING360) << "STARTPRECONFIGURATIONPROCESS";
     // Force the default settings
     resetSettings();
 
