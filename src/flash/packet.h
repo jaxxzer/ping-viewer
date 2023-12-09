@@ -43,19 +43,19 @@ public:
         uint8_t start;
         uint8_t id;
         uint16_t length;
-    } __attribute__((packed)) packet_header_t;
+    }  packet_header_t;
 
     typedef struct {
         uint8_t checksum;
         uint8_t complement;
         uint8_t end;
-    } __attribute__((packed)) packet_footer_t;
+    }  packet_footer_t;
 
     typedef union {
         struct {
             packet_header_t header;
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[7];
     } packet_empty_t;
 
@@ -115,7 +115,7 @@ public:
             packet_header_t header;
             uint32_t address;
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[4 + 7];
     } packet_cmd_read_pgm_mem_t;
 
@@ -134,7 +134,7 @@ public:
             uint32_t address;
             uint8_t rowData[PACKET_ROW_LENGTH];
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[4 + PACKET_ROW_LENGTH + 7];
     } packet_cmd_write_pgm_mem_t;
 
@@ -152,7 +152,7 @@ public:
             packet_header_t header;
             uint8_t cfgData[24];
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[24 + 7];
     } packet_cmd_write_cfg_mem_t;
 
@@ -169,7 +169,7 @@ public:
             packet_header_t header;
             uint8_t rowData[PACKET_ROW_LENGTH];
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[PACKET_ROW_LENGTH + 7];
     } packet_rsp_pgm_mem_t;
 
@@ -178,7 +178,7 @@ public:
             packet_header_t header;
             uint16_t deviceId;
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[2 + 7];
     } packet_rsp_dev_id_t;
 
@@ -191,7 +191,7 @@ public:
             uint8_t version_minor;
             uint8_t version_patch;
             packet_footer_t footer;
-        } __attribute__((packed)) message;
+        }  message;
         uint8_t data[5 + 7];
     } packet_rsp_version_t;
 
