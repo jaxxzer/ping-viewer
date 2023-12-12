@@ -28,8 +28,8 @@
 #include "util.h"
 #include "waterfallplot.h"
 
-#include "packet.h"
 #include "pic-hex.cpp"
+#include "ping360bootloaderpacket.h"
 
 Q_DECLARE_LOGGING_CATEGORY(mainCategory)
 

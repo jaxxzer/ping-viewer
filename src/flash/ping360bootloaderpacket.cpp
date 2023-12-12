@@ -1,4 +1,4 @@
-#include "packet.h"
+#include "ping360bootloaderpacket.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

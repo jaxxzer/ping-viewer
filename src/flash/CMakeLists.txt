@@ -14,7 +14,7 @@ STATIC
     ping360flasher.cpp
     ping360flashworker.cpp
     pic-hex.cpp
-    packet.cpp
+    ping360bootloaderpacket.cpp
     ${LIBCINTELHEXFILES}
 )
 

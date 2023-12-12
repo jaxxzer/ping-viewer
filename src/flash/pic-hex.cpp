@@ -6,7 +6,9 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-PicHex::PicHex(const char* filename)
+PicHex::PicHex() { }
+
+bool PicHex::pic_hex_read_hex(const char* filename)
 {
     pic_hex_extract_application(filename);
     pic_hex_extract_configuration(filename);
@@ -90,13 +92,13 @@ bool PicHex::pic_hex_mem_cpy(ihex_recordset_t* record_set, uint8_t* destination,
 
         // record out of range low
         if (record_address < offset) {
-            // printf("warn, record %d address %08x below offset %08x\r\n", i, record_address, offset);
+            printf("warn, record %d address %08x below offset %08x\r\n", i, record_address, offset);
             continue;
         }
 
         // record out of range high
         if (record_address >= offset + length) {
-            // printf("warn, record %d address %08x beyond range %08x + %08x\r\n", i, record_address, offset, length);
+            printf("warn, record %d address %08x beyond range %08x + %08x\r\n", i, record_address, offset, length);
             continue;
         }
 
@@ -108,8 +110,7 @@ bool PicHex::pic_hex_mem_cpy(ihex_recordset_t* record_set, uint8_t* destination,
 
         // record out of range high
         if (destination_address >= length) {
-            // printf("warn, destination address %08x beyond range %08x + %08x\r\n", destination_address, offset,
-            // length);
+            printf("warn, destination address %08x beyond range %08x + %08x\r\n", destination_address, offset, length);
             continue;
         }
 

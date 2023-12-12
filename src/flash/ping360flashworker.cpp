@@ -44,9 +44,9 @@ void Ping360FlashWorker::run()
         if (version.message.version_major != expectedVersionMajor
             || version.message.version_minor != expectedVersionMinor
             || version.message.version_patch != expectedVersionPatch) {
-            error(QString::asprintf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d", version.message.version_major,
-                version.message.version_minor, version.message.version_patch, expectedVersionMajor,
-                expectedVersionMinor, expectedVersionPatch));
+            error(QString::asprintf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d",
+                version.message.version_major, version.message.version_minor, version.message.version_patch,
+                expectedVersionMajor, expectedVersionMinor, expectedVersionPatch));
             return;
         }
 
@@ -59,29 +59,29 @@ void Ping360FlashWorker::run()
         return;
     }
 
-    qCInfo(PING360FLASHWORKER) << QString::asprintf("loading ping360 firmware from %s...", _firmwareFilePath.toLocal8Bit().data());
+    qCInfo(PING360FLASHWORKER) << QString::asprintf(
+        "loading ping360 firmware from %s...", _firmwareFilePath.toLocal8Bit().data());
 
     PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
 
-
     emit stateChanged(Flasher::Flashing);
 
-  qCInfo(PING360FLASHWORKER) << "erasing program memory";
+    qCInfo(PING360FLASHWORKER) << "erasing program memory";
 
     uint8_t fill[Ping360BootloaderPacket::PACKET_ROW_LENGTH];
     memset(fill, 0xff, sizeof(fill));
-  for (int i = 0; i < 86; i++) {
-    if (i >= 1 && i <= 3) {
-      continue;
+    for (int i = 0; i < 86; i++) {
+        if (i >= 1 && i <= 3) {
+            continue;
+        }
+        if (bl_write_program_memory(fill, i * 0x400)) {
+            qCInfo(PING360FLASHWORKER) << QString("erase memory address 0x%1...ok").arg(i * 0x400, 8, 16, QChar('0'));
+        } else {
+            error(QString("error erasing memory address 0x%1").arg(i * 0x400, 8, 16, QChar('0')));
+            return;
+        }
+        emit flashProgressChanged(flashProgressPercentFactor * i / 86.0f);
     }
-    if (bl_write_program_memory(fill, i * 0x400)) {
-      qCInfo(PING360FLASHWORKER) << QString("erase memory address 0x%1...ok").arg(i*0x400, 8, 16, QChar('0'));
-    } else {
-      error(QString("error erasing memory address 0x%1").arg(i*0x400, 8, 16, QChar('0')));
-      return;
-    }
-    emit flashProgressChanged(flashProgressPercentFactor * i / 86.0f);
-  }
     qCInfo(PING360FLASHWORKER) << "writing application...";
     for (int i = 0; i < 86; i++) {
         if (i >= 1 && i <= 3) {
@@ -98,44 +98,45 @@ void Ping360FlashWorker::run()
             error(QString("write memory address 0x%1: error").arg(i * 0x400, 8, 16, QChar('0')));
             return;
         }
-        emit flashProgressChanged(flashProgressPercentFactor + flashProgressPercentFactor*i/86.0f);
+        emit flashProgressChanged(flashProgressPercentFactor + flashProgressPercentFactor * i / 86.0f);
     }
 
     uint16_t bootAddress = 0x0000;
-    if (bl_write_program_memory(
-            hex.pic_hex_application_data, bootAddress)) {
-        qCInfo(PING360FLASHWORKER) << QString("write boot memory address 0x%1...").arg(bootAddress, 8, 16, QChar('0')) << "ok";
+    if (bl_write_program_memory(hex.pic_hex_application_data, bootAddress)) {
+        qCInfo(PING360FLASHWORKER) << QString("write boot memory address 0x%1...").arg(bootAddress, 8, 16, QChar('0'))
+                                   << "ok";
     } else {
         error(QString("error writing boot memory address 0x%1...").arg(bootAddress, 8, 16, QChar('0')));
         return;
     }
 
     if (_verify) {
-      qCInfo(PING360FLASHWORKER) << "verifying application...";
-          uint8_t* verify;
-          for (int i = 0; i < 86; i++) {
-              if (i >= 1 && i <= 3) {
-                  continue; // protected bootloader code
-              }
-              uint32_t offset = i * 0x400;
-              bool verify_ok = true;
-              if (bl_read_program_memory(&verify, offset)) {
-                  for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
-                      if (verify[j] != hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
-                          qCWarning(PING360FLASHWORKER) << QString::asprintf("error: program data differs at 0x%08llx: 0x%02x != 0x%02x\n",
-                              i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
-                              hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
-                      }
-                  }
-                  qCInfo(PING360FLASHWORKER) << QString::asprintf("verify 0x%08x: ok", offset);
-              } else {
-                  error(QString::asprintf("verify 0x%08x: error reading program memory", offset));
-                  return;
-              }
-              emit flashProgressChanged(2*flashProgressPercentFactor + flashProgressPercentFactor*i/86.0f);
-          }
+        qCInfo(PING360FLASHWORKER) << "verifying application...";
+        uint8_t* verify;
+        for (int i = 0; i < 86; i++) {
+            if (i >= 1 && i <= 3) {
+                continue; // protected bootloader code
+            }
+            uint32_t offset = i * 0x400;
+            bool verify_ok = true;
+            if (bl_read_program_memory(&verify, offset)) {
+                for (int j = 0; j < Ping360BootloaderPacket::PACKET_ROW_LENGTH; j++) {
+                    if (verify[j] != hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]) {
+                        qCWarning(PING360FLASHWORKER)
+                            << QString::asprintf("error: program data differs at 0x%08llx: 0x%02x != 0x%02x\n",
+                                   i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j, verify[j],
+                                   hex.pic_hex_application_data[i * Ping360BootloaderPacket::PACKET_ROW_LENGTH + j]);
+                    }
+                }
+                qCInfo(PING360FLASHWORKER) << QString::asprintf("verify 0x%08x: ok", offset);
+            } else {
+                error(QString::asprintf("verify 0x%08x: error reading program memory", offset));
+                return;
+            }
+            emit flashProgressChanged(2 * flashProgressPercentFactor + flashProgressPercentFactor * i / 86.0f);
+        }
     }
-    
+
     if (bl_write_configuration_memory(hex.pic_hex_configuration_data)) {
         qCInfo(PING360FLASHWORKER) << "writing configuration...ok";
     } else {
@@ -313,6 +314,6 @@ int Ping360FlashWorker::port_read(uint8_t* data, int nBytes)
 
 void Ping360FlashWorker::error(const QString message)
 {
-  emit messageChanged(message);
-  emit stateChanged(Flasher::Error);
+    emit messageChanged(message);
+    emit stateChanged(Flasher::Error);
 }

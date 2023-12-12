@@ -164,20 +164,21 @@ void Ping360::checkBootloader()
     Ping360BootloaderPacket::packet_cmd_read_version_t readVersion
         = Ping360BootloaderPacket::packet_cmd_read_version_init;
     Ping360BootloaderPacket::packet_update_footer(readVersion.data);
-    link()->write(reinterpret_cast<const char*>(readVersion.data), Ping360BootloaderPacket::packet_get_length(readVersion.data));
+    link()->write(
+        reinterpret_cast<const char*>(readVersion.data), Ping360BootloaderPacket::packet_get_length(readVersion.data));
     _ping360BootloaderPacketParser.reset();
 
-    QMetaObject::Connection blScanCallback = connect(link(), &AbstractLink::newData, this, [this](const QByteArray& data) {
-        for (auto byte : data) {
-            if (_ping360BootloaderPacketParser.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
-                qCWarning(PING_PROTOCOL_PING360) << "bootloader found!";
-                _isBootloader = true;
-                emit isBootloaderChanged();
-                emit firmwareVersionMinorChanged();
-            }
-
-        }
-    });
+    QMetaObject::Connection blScanCallback
+        = connect(link(), &AbstractLink::newData, this, [this](const QByteArray& data) {
+              for (auto byte : data) {
+                  if (_ping360BootloaderPacketParser.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
+                      qCWarning(PING_PROTOCOL_PING360) << "bootloader found!";
+                      _isBootloader = true;
+                      emit isBootloaderChanged();
+                      emit firmwareVersionMinorChanged();
+                  }
+              }
+          });
 
     QTimer::singleShot(250, [=] {
         disconnect(blScanCallback);
@@ -613,7 +614,7 @@ void Ping360::printSensorInformation() const
 
 void Ping360::checkNewFirmwareInGitHubPayload(const QJsonDocument& jsonDocument)
 {
-   float lastVersionAvailable = 0.0;
+    float lastVersionAvailable = 0.0;
 
     auto filesPayload = jsonDocument.array();
     for (const QJsonValue& filePayload : filesPayload) {

@@ -9,15 +9,23 @@
 class Ping360BootloaderPacket {
 public:
     // Ping360BootloaderPacket();
-
-    static const qsizetype PACKET_MAX_LENGTH = 1600;
-    static const qsizetype PACKET_ROW_LENGTH = 1536;
-
+    
+    // the maximum length of a packet defined by the protocol
+    // The CMD_WRITE_PGM_MEM and CMD_READ_PGM_MEM packets are
+    // the longest with 1600 bytes
+    static const uint16_t PACKET_MAX_LENGTH = 1600;
+    
+    // 
+    static const uint16_t PACKET_ROW_LENGTH = 1536;
+    
+    // All packets start with byte PACKET_FRAMING_START
+    // All packets end with byte PACKET_FRAMING_END
     typedef enum {
         PACKET_FRAMING_START = 0x5a,
         PACKET_FRAMING_END = 0xa5,
     } packet_framing_e;
-
+    
+    
     typedef enum {
         ID_LOW = 0x30,
         RSP_NACK = 0x30,
@@ -36,7 +44,8 @@ public:
         CMD_READ_VERSION = 0x48,
         ID_HIGH
     } packet_id_e;
-
+    
+    
     typedef uint8_t* packet_t;
 
     typedef struct {

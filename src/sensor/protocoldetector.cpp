@@ -175,9 +175,11 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
     if (!_detected) {
 
         // Probe for Ping360 Bootloader
-        Ping360BootloaderPacket::packet_cmd_read_dev_id_t readDevId = Ping360BootloaderPacket::packet_cmd_read_dev_id_init;
+        Ping360BootloaderPacket::packet_cmd_read_dev_id_t readDevId
+            = Ping360BootloaderPacket::packet_cmd_read_dev_id_init;
         Ping360BootloaderPacket::packet_update_footer(readDevId.data);
-        port.write(reinterpret_cast<const char*>(readDevId.data), Ping360BootloaderPacket::packet_get_length(readDevId.data));
+        port.write(
+            reinterpret_cast<const char*>(readDevId.data), Ping360BootloaderPacket::packet_get_length(readDevId.data));
         port.waitForBytesWritten(100);
 
         attempts = 0;
@@ -193,26 +195,26 @@ bool ProtocolDetector::checkSerial(LinkConfiguration& linkConf)
         // after bootloader contact has been made. Send a reset command to start the main
         // firmware application it has a valid firmware
         if (_detected) {
-                qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "resetting processor";
+            qCInfo(PING_PROTOCOL_PROTOCOLDETECTOR) << "resetting processor";
 
-        //         Ping360BootloaderPacket::packet_cmd_reset_processor_t resetProcessor
-        //     = Ping360BootloaderPacket::packet_cmd_reset_processor_init;
-        // Ping360BootloaderPacket::packet_update_footer(resetProcessor.data);
-        //         port.write(reinterpret_cast<const char*>(resetProcessor.data), Ping360BootloaderPacket::packet_get_length(resetProcessor.data));
+            //         Ping360BootloaderPacket::packet_cmd_reset_processor_t resetProcessor
+            //     = Ping360BootloaderPacket::packet_cmd_reset_processor_init;
+            // Ping360BootloaderPacket::packet_update_footer(resetProcessor.data);
+            //         port.write(reinterpret_cast<const char*>(resetProcessor.data),
+            //         Ping360BootloaderPacket::packet_get_length(resetProcessor.data));
 
-
-                Ping360BootloaderPacket::packet_cmd_jump_start_t jumpStart
-            = Ping360BootloaderPacket::packet_cmd_jump_start_init;
-        Ping360BootloaderPacket::packet_update_footer(jumpStart.data);
-                port.write(reinterpret_cast<const char*>(jumpStart.data), Ping360BootloaderPacket::packet_get_length(jumpStart.data));
-
+            Ping360BootloaderPacket::packet_cmd_jump_start_t jumpStart
+                = Ping360BootloaderPacket::packet_cmd_jump_start_init;
+            Ping360BootloaderPacket::packet_update_footer(jumpStart.data);
+            port.write(reinterpret_cast<const char*>(jumpStart.data),
+                Ping360BootloaderPacket::packet_get_length(jumpStart.data));
 
             port.waitForBytesWritten(100);
             port.waitForReadyRead(100);
             _ping360BootloaderPacket.reset();
 
             if (checkBuffer(port.readAll(), linkConf)) {
-                qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "got response to reset command";
+                qCInfo(PING_PROTOCOL_PROTOCOLDETECTOR) << "got response to reset command";
             }
         }
     }
@@ -308,13 +310,11 @@ bool ProtocolDetector::checkBuffer(const QByteArray& buffer, LinkConfiguration& 
             }
             return true;
         }
-        if (_ping360BootloaderPacket.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE)
-        {
+        if (_ping360BootloaderPacket.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
             qCCritical(PING_PROTOCOL_PROTOCOLDETECTOR) << "received ping360 bootloader packet";
             linkConf.setDeviceType(PingDeviceType::PING360);
             return true;
         }
-
     }
     return false;
 }

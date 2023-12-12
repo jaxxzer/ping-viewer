@@ -2,7 +2,7 @@
 
 #include "flasher.h"
 #include "link.h"
-#include "packet.h"
+#include "ping360bootloaderpacket.h"
 
 #include <QDateTime>
 #include <QLoggingCategory>
