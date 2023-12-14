@@ -1,17 +1,19 @@
 #include "pic-hex.h"
 
-extern "C" {
-#include <cintelhex.h>
-}
 #include <stdio.h>
 #include <string.h>
 
-PicHex::PicHex() { }
-
-bool PicHex::pic_hex_read_hex(const char* filename)
+bool PicHex::pic_hex_read_file(const char* filename)
 {
-    pic_hex_extract_application(filename);
-    pic_hex_extract_configuration(filename);
+    printf("extracting pic hex application data\n");
+    if (!pic_hex_extract_application(filename)) {
+        return false;
+    }
+    printf("extracting pic hex configuration data\n");
+    if (!pic_hex_extract_configuration(filename)) {
+        return false;
+    }
+    return true;
 }
 
 bool PicHex::pic_hex_extract_application(const char* filename)
@@ -92,13 +94,13 @@ bool PicHex::pic_hex_mem_cpy(ihex_recordset_t* record_set, uint8_t* destination,
 
         // record out of range low
         if (record_address < offset) {
-            printf("warn, record %d address %08x below offset %08x\r\n", i, record_address, offset);
+            //printf("warn, record %d address %08x below offset %08x\r\n", i, record_address, offset);
             continue;
         }
 
         // record out of range high
         if (record_address >= offset + length) {
-            printf("warn, record %d address %08x beyond range %08x + %08x\r\n", i, record_address, offset, length);
+            //printf("warn, record %d address %08x beyond range %08x + %08x\r\n", i, record_address, offset, length);
             continue;
         }
 
@@ -110,18 +112,22 @@ bool PicHex::pic_hex_mem_cpy(ihex_recordset_t* record_set, uint8_t* destination,
 
         // record out of range high
         if (destination_address >= length) {
-            printf("warn, destination address %08x beyond range %08x + %08x\r\n", destination_address, offset, length);
+            //printf("warn, destination address %08x beyond range %08x + %08x\r\n", destination_address, offset, length);
             continue;
         }
 
         for (int j = 0; j < record->ihr_length; j += 4) {
             uint32_t destination_offset = destination_address + j - (j / 4);
-
+            if (destination_offset > length) {
+                //printf("warn, destination offset %08x beyond destination length %d", destination_offset, length);
+                continue;
+            }
             // pointer to destination byte
             uint8_t* target = (uint8_t*)(destination + destination_offset);
 
             // copy a 24 bit word
             for (int l = 0; (l < 3); l++) {
+
                 *(target++) = record->ihr_data[j + l];
             }
         }

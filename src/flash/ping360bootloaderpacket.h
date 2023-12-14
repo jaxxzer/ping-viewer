@@ -1,15 +1,9 @@
 #pragma once
 
 #include <inttypes.h>
-#include <stdbool.h>
-#include <stdio.h>
-
-#include <QByteArray>
 
 class Ping360BootloaderPacket {
 public:
-    // Ping360BootloaderPacket();
-
     static const uint16_t PACKET_MAX_LENGTH = 1600;
     static const uint16_t PACKET_ROW_LENGTH = 1536;
 

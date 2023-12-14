@@ -1,19 +1,15 @@
 #include "ping360flasher.h"
-#include "logger.h"
-
-PING_LOGGING_CATEGORY(PING360FLASH, "ping360.flash")
 
 Ping360Flasher::Ping360Flasher(QObject* parent)
     : Flasher(parent, {115200})
 {
     connect(&_worker, &Ping360FlashWorker::flashProgressChanged, this,
-        [this](float flashProgressPct) { emit flashProgress(flashProgressPct); });
+        [this](float flashProgressPct) { emit flashProgress(flashProgressPct); }, Qt::QueuedConnection);
     connect(
-        &_worker, &Ping360FlashWorker::stateChanged, this, [this](Flasher::States newState) { setState(newState); });
+        &_worker, &Ping360FlashWorker::stateChanged, this, [this](Flasher::States newState) { setState(newState); }, Qt::QueuedConnection);
     connect(&_worker, &Ping360FlashWorker::messageChanged, this, [this](QString message) {
         setMessage(message);
-        qCDebug(PING360FLASH) << message;
-    });
+    }, Qt::QueuedConnection);
 }
 
 void Ping360Flasher::flash()

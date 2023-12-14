@@ -1,8 +1,5 @@
 #include "ping360bootloaderpacket.h"
 
-#include <inttypes.h>
-#include <stdbool.h>
-
 uint16_t Ping360BootloaderPacket::packet_get_payload_length(packet_t packet) { return *(uint16_t*)(packet + 2); }
 
 uint16_t Ping360BootloaderPacket::packet_get_length(packet_t packet) { return packet_get_payload_length(packet) + 7; }

@@ -11,11 +11,6 @@ PING_LOGGING_CATEGORY(PING360FLASHWORKER, "ping360.flash.worker")
 Ping360FlashWorker::Ping360FlashWorker()
     : QThread()
 {
-    // if (!link()->isOpen()) {
-    //   qCCritical(PING_PROTOCOL_SENSOR) << "Connection fail !" << conConf << link()->errorString();
-    //   emit connectionClose();
-    //   return;
-    // }
 }
 
 void Ping360FlashWorker::run()
@@ -41,12 +36,12 @@ void Ping360FlashWorker::run()
     qCInfo(PING360FLASHWORKER) << "fetch version...";
     Ping360BootloaderPacket::packet_rsp_version_t version;
     if (bl_read_version(&version)) {
-        if (version.message.version_major != expectedVersionMajor
-            || version.message.version_minor != expectedVersionMinor
-            || version.message.version_patch != expectedVersionPatch) {
+        if (version.message.version_major != _expectedVersionMajor
+            || version.message.version_minor != _expectedVersionMinor
+            || version.message.version_patch != _expectedVersionPatch) {
             error(QString::asprintf("error, bootloader version is v%d.%d.%d, expected v%d.%d.%d",
                 version.message.version_major, version.message.version_minor, version.message.version_patch,
-                expectedVersionMajor, expectedVersionMinor, expectedVersionPatch));
+                _expectedVersionMajor, _expectedVersionMinor, _expectedVersionPatch));
             return;
         }
 
@@ -62,8 +57,9 @@ void Ping360FlashWorker::run()
     qCInfo(PING360FLASHWORKER) << QString::asprintf(
         "loading ping360 firmware from %s...", _firmwareFilePath.toLocal8Bit().data());
 
-    PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
-
+    // PicHex hex = PicHex(_firmwareFilePath.toLocal8Bit().data());
+    PicHex hex = PicHex();
+    hex.pic_hex_read_file(_firmwareFilePath.toLocal8Bit().constData());
     emit stateChanged(Flasher::Flashing);
 
     qCInfo(PING360FLASHWORKER) << "erasing program memory";

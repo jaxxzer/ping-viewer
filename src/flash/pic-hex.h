@@ -1,26 +1,38 @@
 #pragma once
-// facilities to convert an intel hex to PIC microcontroller memory space
 
-#include <QByteArray>
 #include <cintelhex.h>
-#include <inttypes.h>
-#include <stdbool.h>
 
-// 86 pages * 512 words * 3 bytes
-#define PROGRAM_MEMORY_SIZE 0x20400
-#define PROGRAM_MEMORY_OFFSET 0x0
-
-// 24 bytes configuration in separate memory region
-#define CONFIGURATION_MEMORY_SIZE 24
-#define CONFIGURATION_MEMORY_OFFSET 0x00F80000
-
+// facilities to convert an intel hex to PIC microcontroller memory space
 class PicHex {
 public:
-    PicHex();
-    bool pic_hex_read_hex(const char* filename);
-    // The hex file data for the application memory region
+    // 86 pages * 512 words * 3 bytes
+    static const uint32_t PROGRAM_MEMORY_SIZE = 0x20400;
+    static const uint32_t PROGRAM_MEMORY_OFFSET = 0x0;
+
+    // 24 bytes configuration in separate memory region
+    static const uint32_t CONFIGURATION_MEMORY_SIZE = 24;
+    static const uint32_t CONFIGURATION_MEMORY_OFFSET = 0x00F80000;
+
+    /**
+     * @brief read a hex file and extract the firmware application and configuration data
+     * @param filename
+     * @return true if application and configuration data were successfully extracted
+     */
+    bool pic_hex_read_file(const char* filename);
+
+    /**
+     * @brief The hex file data for the application memory region
+     * this data is valid if pic_hex_read_file returns true
+     */
     uint8_t pic_hex_application_data[PROGRAM_MEMORY_SIZE];
-    // The hex file data for the configuration memory region
+
+    /**
+     * @brief The hex file data for the configuration memory region
+     * The configuration memory region is located at CONFIGURATION_MEMORY_OFFSET
+     * and is CONFIGURATION_MEMORY_SIZE bytes wide
+     * this data is valid if pic_hex_read_file returns true
+     *
+     */
     uint8_t pic_hex_configuration_data[CONFIGURATION_MEMORY_SIZE];
 
 private:

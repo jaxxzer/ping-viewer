@@ -109,16 +109,15 @@ Ping360::Ping360()
                                        << _commonVariables.deviceInformation.firmware_version_patch;
 
         // Wait for firmware information to be available before looking for new versions
-        static bool once = false;
-        if (!once && _commonVariables.deviceInformation.initialized) {
-            once = true;
-
+        if (_commonVariables.deviceInformation.initialized) {
             if (_commonVariables.deviceInformation.firmware_version_major == 3
                 && _commonVariables.deviceInformation.firmware_version_minor == 3
                 && _commonVariables.deviceInformation.firmware_version_patch == 2) {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::AutoTransmitAsync;
+                qCInfo(PING_PROTOCOL_PING360) << "using asynchronous automatic transmit strategy";
             } else {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::Legacy;
+                qCInfo(PING_PROTOCOL_PING360) << "using synchronous transmit strategy";
             }
         }
     });
@@ -304,28 +303,30 @@ void Ping360::legacyProfileRequest()
 void Ping360::asyncProfileRequest()
 {
     if (!_sensorSettings.valid) {
-        qCDebug(PING_PROTOCOL_PING360) << "Invalid automatic sensor configuration, sending message.";
-        ping360_auto_transmit auto_transmit;
+        qCDebug(PING_PROTOCOL_PING360) << "Invalid automatic sensor configuration.";
         _sensorSettings.start_angle = angle_offset() - _sectorSize / 2;
         _sensorSettings.end_angle = (angle_offset() + _sectorSize / 2 - 1);
         // Make sure that we are still inside our valid space
-        _sensorSettings.end_angle %= _angularResolutionGrad;
-
-        auto_transmit.set_mode(1);
-        auto_transmit.set_gain_setting(_sensorSettings.gain_setting);
-        auto_transmit.set_transmit_duration(_sensorSettings.transmit_duration);
-        auto_transmit.set_sample_period(_sensorSettings.sample_period);
-        auto_transmit.set_transmit_frequency(_sensorSettings.transmit_frequency);
-        auto_transmit.set_number_of_samples(_sensorSettings.num_points);
-
-        auto_transmit.set_start_angle(_sensorSettings.start_angle);
-        auto_transmit.set_stop_angle(_sensorSettings.end_angle);
-        auto_transmit.set_num_steps(_angular_speed);
-        auto_transmit.set_delay(0);
-        auto_transmit.updateChecksum();
-
-        writeMessage(auto_transmit);
+        _sensorSettings.end_angle %= _angularResolutionGrad+1;
     }
+
+    qCDebug(PING_PROTOCOL_PING360) << "Sending auto transmit message.";
+
+    ping360_auto_transmit auto_transmit;
+    auto_transmit.set_mode(1);
+    auto_transmit.set_gain_setting(_sensorSettings.gain_setting);
+    auto_transmit.set_transmit_duration(_sensorSettings.transmit_duration);
+    auto_transmit.set_sample_period(_sensorSettings.sample_period);
+    auto_transmit.set_transmit_frequency(_sensorSettings.transmit_frequency);
+    auto_transmit.set_number_of_samples(_sensorSettings.num_points);
+
+    auto_transmit.set_start_angle(_sensorSettings.start_angle);
+    auto_transmit.set_stop_angle(_sensorSettings.end_angle);
+    auto_transmit.set_num_steps(_angular_speed);
+    auto_transmit.set_delay(0);
+    auto_transmit.updateChecksum();
+
+    writeMessage(auto_transmit);
 }
 
 void Ping360::handleMessage(const ping_message& msg)
@@ -350,7 +351,7 @@ void Ping360::handleMessage(const ping_message& msg)
             checkBaudrateProcess();
         } else {
             _baudrateConfigurationTimer.stop();
-            //_timeoutProfileMessage.start();
+            _timeoutProfileMessage.start();
             requestNextProfile();
         }
         return;
@@ -370,7 +371,7 @@ void Ping360::handleMessage(const ping_message& msg)
         if (link()->isWritable()) {
             // Use 200ms for network delay
             const int profileRunningTimeout = _angular_speed / _angularSpeedGradPerMs + 200;
-            //_timeoutProfileMessage.start(profileRunningTimeout);
+            _timeoutProfileMessage.start(profileRunningTimeout);
         }
 
         _data.resize(deviceData.data_length());
@@ -420,7 +421,7 @@ void Ping360::handleMessage(const ping_message& msg)
         if (link()->isWritable()) {
             // Use 200ms for network delay
             const int profileRunningTimeout = _angular_speed / _angularSpeedGradPerMs + 200;
-            //_timeoutProfileMessage.start(profileRunningTimeout);
+            _timeoutProfileMessage.start(profileRunningTimeout);
         }
 
         _data.resize(autoDeviceData.data_length());
@@ -478,7 +479,7 @@ void Ping360::handleMessage(const ping_message& msg)
             requestNextProfile();
 
             // restart timer
-            //_timeoutProfileMessage.start();
+            _timeoutProfileMessage.start();
 
             emit gainSettingChanged();
             emit samplePeriodChanged();
@@ -844,13 +845,12 @@ Ping360::~Ping360()
 {
     updateSensorConfigurationSettings();
 
-    // TODO: Find a better way
-    // Force sensor to stop sensor if running with anything different from Legacy mode
-    // The sensor will stop any automatic behaviour when receiving a normal profile request message
-    if (_profileRequestLogic.type != Ping360RequestStateStruct::Type::Legacy) {
-        for (int i {0}; i < 10; i++) {
-            deltaStep(0);
-            QThread::msleep(100);
-        }
+    ping360_motor_off message;
+    message.updateChecksum();
+
+    // Stop scanning and turn off the stepper motor
+    for (int i {0}; i < 10; i++) {
+        writeMessage(message);
+        QThread::msleep(100);
     }
 }
