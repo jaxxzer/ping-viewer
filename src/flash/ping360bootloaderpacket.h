@@ -2,9 +2,13 @@
 
 #include <inttypes.h>
 
+// A class to provide packet definitions, and to
+// facilitate creating and parsing packets
 class Ping360BootloaderPacket {
 public:
     static const uint16_t PACKET_MAX_LENGTH = 1600;
+
+    // the data length for read/write program memory
     static const uint16_t PACKET_ROW_LENGTH = 1536;
 
     typedef enum {
@@ -135,7 +139,7 @@ public:
     static constexpr packet_cmd_write_pgm_mem_t packet_cmd_write_pgm_mem_init = {{
         {
             PACKET_FRAMING_START, CMD_WRITE_PGM_MEM,
-            1540 // length
+            4 + PACKET_ROW_LENGTH // length
         }, // header
         0, // address
         {0}, {0, 0, PACKET_FRAMING_END} // footer
@@ -189,18 +193,6 @@ public:
         uint8_t data[5 + 7];
     } packet_rsp_version_t;
 
-    static uint16_t packet_get_payload_length(packet_t packet);
-    static uint16_t packet_get_length(packet_t packet);
-
-    static uint8_t packet_calculate_checksum(packet_t packet);
-    static packet_id_e packet_get_id(packet_t packet);
-
-    static uint8_t packet_calculate_complement(packet_t packet);
-
-    static void packet_update_footer(packet_t packet);
-
-    void reset() { parser.parseState = WAIT_START; };
-
     typedef enum {
         ERROR,
         WAIT_START,
@@ -223,5 +215,41 @@ public:
 
     packet_parser_t parser = {WAIT_START};
 
+    /**
+     * @brief reset the parser to start parsing a new packet
+     */
+    void reset() { parser.parseState = WAIT_START; };
+
+    /**
+     * @brief parse a byte to form a ping360 bootloader packet
+     * use reset() to start parsing a new packet
+     * @param byte
+     * @return NEW_MESSAGE if the byte completes a ping360 bootloader packet
+     */
     packet_parse_state_e packet_parse_byte(const uint8_t byte);
+
+    /**
+     * @brief get the packet id for a packet
+     * @param packet
+     * @return the packet id
+     */
+    static packet_id_e packet_get_id(packet_t packet);
+
+    /**
+     * @brief get the length in bytes of the entire packet, header and footer included
+     * @param packet
+     * @return the packet data length in bytes
+     */
+    static uint16_t packet_get_length(packet_t packet);
+
+    /**
+     * @brief update the packet footer data with the calculated complement and checksum
+     * @param packet
+     */
+    static void packet_update_footer(packet_t packet);
+
+private:
+    static uint16_t packet_get_payload_length(packet_t packet);
+    static uint8_t packet_calculate_checksum(packet_t packet);
+    static uint8_t packet_calculate_complement(packet_t packet);
 };

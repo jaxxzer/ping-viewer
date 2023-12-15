@@ -4,7 +4,6 @@
 #include <QNetworkDatagram>
 #include <QSerialPort>
 #include <QSerialPortInfo>
-#include <QTime>
 #include <QUdpSocket>
 #include <QtConcurrent>
 
@@ -124,7 +123,6 @@ QVector<LinkConfiguration> ProtocolDetector::updateLinkConfigurations(QVector<Li
             auto config = {portInfo.portName(), QString::number(baud)};
             tempConfigs.append({LinkType::Serial, config, QString("Detector serial link")});
         }
-        _lastLinkUpdateTimeMs = QDateTime::currentMSecsSinceEpoch();
     }
     return linkConfig + tempConfigs;
 }

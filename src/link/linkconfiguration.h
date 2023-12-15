@@ -4,7 +4,6 @@
 #include <QMap>
 #include <QString>
 #include <QStringList>
-#include <QTime>
 
 #include "abstractlinknamespace.h"
 #include "ping-message-all.h"
@@ -59,8 +58,7 @@ public:
      */
     LinkConfiguration(LinkType linkType = LinkType::None, const QStringList& args = QStringList(),
         const QString& name = QString(), PingDeviceType deviceType = PingDeviceType::UNKNOWN)
-        : _linkConf {args, name, linkType, deviceType}
-        , timeCreatedMs(QDateTime::currentMSecsSinceEpoch()) {};
+        : _linkConf {args, name, linkType, deviceType} {};
 
     /**
      * @brief Construct a new Link Configuration object
@@ -337,7 +335,6 @@ public:
 
     Q_PROPERTY(QString string READ createFullConfString NOTIFY configurationChanged)
 
-    qint64 timeCreatedMs;
 signals:
     void configurationChanged();
 

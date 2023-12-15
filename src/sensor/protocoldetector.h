@@ -2,7 +2,6 @@
 
 #include <QThread>
 
-#include "abstractlink.h"
 #include "linkconfiguration.h"
 #include "ping360bootloaderpacket.h"
 #include "pingparserext.h"
@@ -126,5 +125,4 @@ private:
     QByteArray _deviceInformationMessageByteArray;
     PingParserExt _parser;
     Ping360BootloaderPacket _ping360BootloaderPacket;
-    mutable qint64 _lastLinkUpdateTimeMs;
 };
