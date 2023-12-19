@@ -108,17 +108,15 @@ Ping360::Ping360()
                                        << _commonVariables.deviceInformation.firmware_version_minor
                                        << _commonVariables.deviceInformation.firmware_version_patch;
 
-        // Wait for firmware information to be available before looking for new versions
-        static bool once = false;
-        if (!once && _commonVariables.deviceInformation.initialized) {
-            once = true;
-
+        if (_commonVariables.deviceInformation.initialized) {
             if (_commonVariables.deviceInformation.firmware_version_major == 3
                 && _commonVariables.deviceInformation.firmware_version_minor == 3
-                && _commonVariables.deviceInformation.firmware_version_patch == 1) {
+                && _commonVariables.deviceInformation.firmware_version_patch == 2) {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::AutoTransmitAsync;
+                qCInfo(PING_PROTOCOL_PING360) << "using asynchronous automatic transmit strategy";
             } else {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::Legacy;
+                qCInfo(PING_PROTOCOL_PING360) << "using synchronous transmit strategy";
             }
         }
     });
