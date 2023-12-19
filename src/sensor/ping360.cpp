@@ -61,11 +61,13 @@ Ping360::Ping360()
     _data = QVector<double>(_maxNumberOfPoints, 0);
 
     setName("Ping360");
+
     setControlPanel({"qrc:/Ping360ControlPanel.qml"});
     setSensorVisualizer({"qrc:/Ping360Visualizer.qml"});
     setSensorStatusModel({"qrc:/Ping360StatusModel.qml"});
 
-    connect(this, &Sensor::connectionOpen, this, &Ping360::startPreConfigurationProcess);
+    connect(this, &Sensor::connectionOpen, this, &Ping360::checkBootloader);
+    // connect(this, &Sensor::connectionOpen, this, &Ping360::startPreConfigurationProcess);
 
     // Add timer for worst case scenario
     _timeoutProfileMessage.setInterval(_sensorTimeout);
@@ -108,16 +110,15 @@ Ping360::Ping360()
                                        << _commonVariables.deviceInformation.firmware_version_patch;
 
         // Wait for firmware information to be available before looking for new versions
-        static bool once = false;
-        if (!once && _commonVariables.deviceInformation.initialized) {
-            once = true;
-
+        if (_commonVariables.deviceInformation.initialized) {
             if (_commonVariables.deviceInformation.firmware_version_major == 3
                 && _commonVariables.deviceInformation.firmware_version_minor == 3
-                && _commonVariables.deviceInformation.firmware_version_patch == 1) {
+                && _commonVariables.deviceInformation.firmware_version_patch == 2) {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::AutoTransmitAsync;
+                qCInfo(PING_PROTOCOL_PING360) << "using asynchronous automatic transmit strategy";
             } else {
                 _profileRequestLogic.type = Ping360RequestStateStruct::Type::Legacy;
+                qCInfo(PING_PROTOCOL_PING360) << "using synchronous transmit strategy";
             }
         }
     });
@@ -141,8 +142,53 @@ Ping360::Ping360()
     });
 }
 
+void Ping360::checkBootloader()
+{
+    qCWarning(PING_PROTOCOL_PING360) << "CHECKBOOTLOADER";
+    _isBootloader = false;
+    emit isBootloaderChanged();
+    if (!link()) {
+        return;
+    }
+    if (link()->type() != LinkType::Serial) {
+        return;
+    }
+    if (!link()->isOpen()) {
+        return;
+    }
+    if (!link()->isWritable()) {
+        return;
+    }
+
+    qCWarning(PING_PROTOCOL_PING360) << "checking for bootloader...";
+    Ping360BootloaderPacket::packet_cmd_read_version_t readVersion
+        = Ping360BootloaderPacket::packet_cmd_read_version_init;
+    Ping360BootloaderPacket::packet_update_footer(readVersion.data);
+    link()->write(
+        reinterpret_cast<const char*>(readVersion.data), Ping360BootloaderPacket::packet_get_length(readVersion.data));
+    _ping360BootloaderPacketParser.reset();
+
+    QMetaObject::Connection blScanCallback
+        = connect(link(), &AbstractLink::newData, this, [this](const QByteArray& data) {
+              for (auto byte : data) {
+                  if (_ping360BootloaderPacketParser.packet_parse_byte(byte) == Ping360BootloaderPacket::NEW_MESSAGE) {
+                      qCWarning(PING_PROTOCOL_PING360) << "bootloader found!";
+                      _isBootloader = true;
+                      emit isBootloaderChanged();
+                      emit firmwareVersionMinorChanged();
+                  }
+              }
+          });
+
+    QTimer::singleShot(250, [=] {
+        disconnect(blScanCallback);
+        startPreConfigurationProcess();
+    });
+}
+
 void Ping360::startPreConfigurationProcess()
 {
+    qCWarning(PING_PROTOCOL_PING360) << "STARTPRECONFIGURATIONPROCESS";
     // Force the default settings
     resetSettings();
 
@@ -258,28 +304,30 @@ void Ping360::legacyProfileRequest()
 void Ping360::asyncProfileRequest()
 {
     if (!_sensorSettings.valid) {
-        qCDebug(PING_PROTOCOL_PING360) << "Invalid automatic sensor configuration, sending message.";
-        ping360_auto_transmit auto_transmit;
+        qCDebug(PING_PROTOCOL_PING360) << "Invalid automatic sensor configuration.";
         _sensorSettings.start_angle = angle_offset() - _sectorSize / 2;
         _sensorSettings.end_angle = (angle_offset() + _sectorSize / 2 - 1);
         // Make sure that we are still inside our valid space
-        _sensorSettings.end_angle %= _angularResolutionGrad;
-
-        auto_transmit.set_mode(1);
-        auto_transmit.set_gain_setting(_sensorSettings.gain_setting);
-        auto_transmit.set_transmit_duration(_sensorSettings.transmit_duration);
-        auto_transmit.set_sample_period(_sensorSettings.sample_period);
-        auto_transmit.set_transmit_frequency(_sensorSettings.transmit_frequency);
-        auto_transmit.set_number_of_samples(_sensorSettings.num_points);
-
-        auto_transmit.set_start_angle(_sensorSettings.start_angle);
-        auto_transmit.set_stop_angle(_sensorSettings.end_angle);
-        auto_transmit.set_num_steps(_angular_speed);
-        auto_transmit.set_delay(0);
-        auto_transmit.updateChecksum();
-
-        writeMessage(auto_transmit);
+        _sensorSettings.end_angle %= _angularResolutionGrad + 1;
     }
+
+    qCDebug(PING_PROTOCOL_PING360) << "Sending auto transmit message.";
+
+    ping360_auto_transmit auto_transmit;
+    auto_transmit.set_mode(1);
+    auto_transmit.set_gain_setting(_sensorSettings.gain_setting);
+    auto_transmit.set_transmit_duration(_sensorSettings.transmit_duration);
+    auto_transmit.set_sample_period(_sensorSettings.sample_period);
+    auto_transmit.set_transmit_frequency(_sensorSettings.transmit_frequency);
+    auto_transmit.set_number_of_samples(_sensorSettings.num_points);
+
+    auto_transmit.set_start_angle(_sensorSettings.start_angle);
+    auto_transmit.set_stop_angle(_sensorSettings.end_angle);
+    auto_transmit.set_num_steps(_angular_speed);
+    auto_transmit.set_delay(0);
+    auto_transmit.updateChecksum();
+
+    writeMessage(auto_transmit);
 }
 
 void Ping360::handleMessage(const ping_message& msg)
@@ -795,13 +843,12 @@ Ping360::~Ping360()
 {
     updateSensorConfigurationSettings();
 
-    // TODO: Find a better way
-    // Force sensor to stop sensor if running with anything different from Legacy mode
-    // The sensor will stop any automatic behaviour when receiving a normal profile request message
-    if (_profileRequestLogic.type != Ping360RequestStateStruct::Type::Legacy) {
-        for (int i {0}; i < 10; i++) {
-            deltaStep(0);
-            QThread::msleep(100);
-        }
+    ping360_motor_off message;
+    message.updateChecksum();
+
+    // Stop scanning and turn off the stepper motor
+    for (int i {0}; i < 10; i++) {
+        writeMessage(message);
+        QThread::msleep(100);
     }
 }

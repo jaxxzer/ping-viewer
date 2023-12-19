@@ -86,7 +86,7 @@ Item {
     QC1.SplitView {
         orientation: Qt.Horizontal
         anchors.fill: parent
-
+        
         Item {
             /** TODO: The shader logic should be inside done inside of PolarPlot c++ Object
              *   Or better encapsulated
@@ -244,6 +244,22 @@ Item {
 
                 anchors.fill: shader
                 visible: false
+            }
+
+            Text {
+                id: bootloaderWarning
+
+                visible: ping.isBootloader
+                anchors.fill: waterfall
+                anchors.margins: 5
+                font.bold: true
+                font.family: "Arial"
+                font.pointSize: 15
+                text: "Ping360 is in Bootloader Mode. Please flash firmware."
+                color: "red"
+                z: 100
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
