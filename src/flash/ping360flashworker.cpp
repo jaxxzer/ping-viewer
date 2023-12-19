@@ -310,6 +310,9 @@ int Ping360FlashWorker::port_read(uint8_t* data, int nBytes)
 
 void Ping360FlashWorker::error(const QString message)
 {
+    if(_port) {
+        _port->close();
+    }
     emit messageChanged(message);
     emit stateChanged(Flasher::Error);
 }
