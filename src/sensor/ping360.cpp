@@ -55,6 +55,8 @@ const float Ping360::_angularSpeedGradPerMs = 400.0f / 2400.0f;
 Ping360::Ping360()
     : PingSensor(PingDeviceType::PING360)
 {
+    _flasher = new Ping360Flasher(nullptr);
+
     // QVector crashs when constructed in initialization list
     _data = QVector<double>(_maxNumberOfPoints, 0);
 
