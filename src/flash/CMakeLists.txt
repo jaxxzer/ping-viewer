@@ -1,7 +1,3 @@
-include_directories(
-    lib/libcintelhex/include
-)
-
 file(GLOB LIBCINTELHEXFILES
     ${PROJECT_SOURCE_DIR}/lib/libcintelhex/src/ihex_parse.c
     ${PROJECT_SOURCE_DIR}/lib/libcintelhex/src/ihex_record.c
