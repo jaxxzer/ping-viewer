@@ -129,6 +129,16 @@ Ping360::Ping360()
 
     // By default heading integration is enabled
     enableHeadingIntegration(true);
+
+    connect(this, &Ping360::firmwareVersionMinorChanged, this, [this] {
+        // Wait for firmware information to be available before looking for new versions
+        static bool once = false;
+        if (!once) {
+            once = true;
+            NetworkTool::self()->checkNewFirmware(
+                "ping360", std::bind(&Ping360::checkNewFirmwareInGitHubPayload, this, std::placeholders::_1));
+        }
+    });
 }
 
 void Ping360::startPreConfigurationProcess()
@@ -516,6 +526,11 @@ void Ping360::flash(const QString& fileUrl, bool sendPingGotoBootloader, int bau
         updateSensorConfigurationSettings();
 
         qCDebug(PING_PROTOCOL_PING360) << "Start flash.";
+
+        // we stop the timer again after the link is closed
+        // in case a device data message came in asynchronously and restarted
+        // the timer
+        _timeoutProfileMessage.stop();
 
         QTimer::singleShot(500, flashSensor);
     };
