@@ -30,6 +30,11 @@ void Ping360BootloaderPacket::packet_update_footer(packet_t packet)
 
 Ping360BootloaderPacket::packet_parse_state_e Ping360BootloaderPacket::packet_parse_byte(const uint8_t byte)
 {
+    // don't overflow the parse buffer
+    if (parser.rxTail >= PACKET_MAX_LENGTH) {
+        return ERROR;
+    }
+
     switch (parser.parseState) {
     case ERROR:
     case NEW_MESSAGE:
